@@ -99,6 +99,27 @@ export class SpecCodeLensProvider implements vscode.CodeLensProvider {
   private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
+  /** Tracks tasks currently being started: "specName::taskId" */
+  private _inProgressTasks = new Set<string>();
+
+  setTaskInProgress(
+    specName: string,
+    taskId: string,
+    inProgress: boolean,
+  ): void {
+    const key = `${specName}::${taskId}`;
+    if (inProgress) {
+      this._inProgressTasks.add(key);
+    } else {
+      this._inProgressTasks.delete(key);
+    }
+    this._onDidChangeCodeLenses.fire();
+  }
+
+  isTaskInProgress(specName: string, taskId: string): boolean {
+    return this._inProgressTasks.has(`${specName}::${taskId}`);
+  }
+
   refresh(): void {
     this._onDidChangeCodeLenses.fire();
   }
@@ -297,19 +318,6 @@ export class SpecCodeLensProvider implements vscode.CodeLensProvider {
             ? `${linkedCount} implementation file(s)`
             : "No implementation files";
 
-      let referencedFileHints: string[] = [];
-      if (linkedCount === 0) {
-        const taskText = taskBlocks.get(task.id) ?? task.title;
-        referencedFileHints = extractFileReferences(taskText);
-        if (referencedFileHints.length > 0) {
-          const label =
-            referencedFileHints.length === 1
-              ? path.basename(referencedFileHints[0])
-              : `${referencedFileHints.length} referenced file(s)`;
-          filePart = `Referenced: ${label}`;
-        }
-      }
-
       if (!task.requirementIds || task.requirementIds.length === 0) {
         const fromText = extractRequirementIdsFromText(
           taskBlocks.get(task.id) ?? "",
@@ -333,20 +341,59 @@ export class SpecCodeLensProvider implements vscode.CodeLensProvider {
         }),
       );
 
-      lenses.push(
-        new vscode.CodeLens(range, {
-          title: filePart,
-          command:
-            referencedFileHints.length > 0
-              ? "copilot-specs.openTaskReferencedFiles"
-              : "copilot-specs.openTaskImplementations",
-          arguments: [specName, task.id],
-          tooltip:
-            referencedFileHints.length > 0
-              ? `Open referenced files for task ${task.id}`
-              : `Open linked implementation files for task ${task.id}`,
-        }),
-      );
+      if (linkedCount > 0) {
+        lenses.push(
+          new vscode.CodeLens(range, {
+            title: filePart,
+            command: "copilot-specs.openTaskImplementations",
+            arguments: [specName, task.id],
+            tooltip: `Open linked implementation files for task ${task.id}`,
+          }),
+        );
+      }
+
+      const taskLineText = document.lineAt(line).text.trimStart();
+      const isHeadingTask = taskLineText.startsWith("###");
+      const inProgress = this.isTaskInProgress(specName, task.id);
+
+      if (inProgress) {
+        lenses.push(
+          new vscode.CodeLens(range, {
+            title: "$(sync~spin)  In progress",
+            command: "",
+            tooltip: `Task ${task.id} is being worked on`,
+          }),
+        );
+      } else if (task.completed && isHeadingTask) {
+        lenses.push(
+          new vscode.CodeLens(range, {
+            title: "$(pass-filled)  Task Completed",
+            command: "",
+            tooltip: `All subtasks for ${task.id} are complete`,
+          }),
+        );
+      } else if (!task.completed) {
+        lenses.push(
+          new vscode.CodeLens(range, {
+            title: isHeadingTask
+              ? "$(circle-large-outline)  Start task"
+              : "$(play)  Start task",
+            command: "copilot-specs.startTask",
+            arguments: [specName, task.id],
+            tooltip: `Start task ${task.id} with Copilot`,
+          }),
+        );
+        if (isHeadingTask) {
+          lenses.push(
+            new vscode.CodeLens(range, {
+              title: "$(check)  Mark complete",
+              command: "copilot-specs.markTaskComplete",
+              arguments: [specName, task.id],
+              tooltip: `Mark task ${task.id} and all its sub-tasks as complete`,
+            }),
+          );
+        }
+      }
     }
 
     return lenses;

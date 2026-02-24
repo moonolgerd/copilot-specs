@@ -63,6 +63,18 @@
         "icon": "$(run-all)"
       },
       {
+        "command": "copilot-specs.startTask",
+        "title": "Start Task with Copilot",
+        "category": "Copilot Specs",
+        "icon": "$(play)"
+      },
+      {
+        "command": "copilot-specs.markTaskComplete",
+        "title": "Mark Task and Sub-tasks Complete",
+        "category": "Copilot Specs",
+        "icon": "$(check)"
+      },
+      {
         "command": "copilot-specs.checkTask",
         "title": "Mark Task Complete",
         "category": "Copilot Specs"
@@ -315,6 +327,11 @@
         },
         {
           "command": "copilot-specs.checkTask",
+          "when": "viewItem == task-incomplete",
+          "group": "inline"
+        },
+        {
+          "command": "copilot-specs.startTask",
           "when": "viewItem == task-incomplete",
           "group": "inline"
         },

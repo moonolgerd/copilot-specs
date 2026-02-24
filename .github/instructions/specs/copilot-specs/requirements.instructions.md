@@ -27,6 +27,11 @@ AND extract task IDs from `<!-- task:Tn -->` or `**Tn**` prefixes
 AND extract requirement references from `<!-- requires:REQ-01 -->` and task text
 AND compute completion progress from parsed task state.
 
+WHEN a tasks document uses `### Heading` style tasks
+THE SYSTEM SHALL parse each `###` line as a parent task
+AND collect subsequent `- [ ]` / `- [x]` lines as its subtasks regardless of indentation
+AND derive the parent task completion state from whether all subtasks are checked.
+
 WHEN a task completion toggle command is invoked
 THE SYSTEM SHALL update the checkbox state in the tasks markdown file
 AND preserve the rest of the document structure.
@@ -49,13 +54,15 @@ THE SYSTEM SHALL render CodeLens entries that open the spec panel or related tas
 
 WHEN viewing tasks or requirements documents
 THE SYSTEM SHALL render CodeLens entries for requirement-to-task and task-to-implementation navigation
-AND support opening linked files and inferred file references.
+AND support opening linked files and inferred file references
+AND SHALL NOT render a "Referenced" lens when no implementation files are linked.
 
 ### REQ-05: Copilot-Assisted Generation and Autopilot
 
 WHEN the user runs “Generate with Copilot”
 THE SYSTEM SHALL generate requirements, design, and tasks content via chat model
-AND write generated content back to spec files.
+AND write generated content back to spec files
+AND preserve the completion state of any tasks that were already marked complete before regeneration.
 
 WHEN the user runs Autopilot
 THE SYSTEM SHALL load pending tasks for a selected spec
@@ -71,3 +78,31 @@ THE SYSTEM SHALL create or update `.github/hooks/*.json` with the selected lifec
 WHEN MCP config files are present in workspace or user locations
 THE SYSTEM SHALL list discovered servers grouped by source
 AND allow toggling server enabled state by updating the owning config file.
+
+### REQ-07: Start Task Inline Action
+
+WHEN a task is incomplete and visible in the Spec Explorer tree
+THE SYSTEM SHALL display an inline `$(play)` action button next to the task item.
+
+WHEN viewing a heading-style tasks document (`### T1: Title`)
+THE SYSTEM SHALL show `$(circle-large-outline) Start task` CodeLens on incomplete heading lines
+AND show `$(pass-filled) Task Completed` CodeLens when all subtasks under that heading are checked.
+
+WHEN the user activates the Start Task action for an incomplete task
+THE SYSTEM SHALL open a focused Copilot Chat session
+AND pre-populate the prompt with the spec name, task ID, task title, and any linked requirement IDs
+AND include relevant context: the matching requirements text, a design doc excerpt, and the paths of any linked implementation files.
+
+WHEN the Copilot Chat session opened by Start Task is closed or resolved
+THE SYSTEM SHALL prompt the user to mark the task as complete.
+
+### REQ-08: Spec Panel Interactive Task Rendering
+
+WHEN the spec panel displays the Tasks tab
+THE SYSTEM SHALL render tasks from the parsed `Task[]` model rather than from raw markdown HTML
+AND each task SHALL be displayed as an enabled checkbox with its title and completion state
+AND subtasks SHALL be rendered indented beneath their parent task.
+
+WHEN the user clicks a task checkbox in the spec panel
+THE SYSTEM SHALL toggle the task completion state in the markdown file
+AND refresh the panel to reflect the updated progress.

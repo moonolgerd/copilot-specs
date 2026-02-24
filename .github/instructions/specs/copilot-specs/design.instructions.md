@@ -46,13 +46,17 @@ The extension is implemented as a VS Code extension centered around `activate()`
 - `taskManager.ts` parses checkbox markdown into typed task models
 - Supports task IDs from comments or bold prefixes
 - Supports requirement linkage via `requires` comments or inferred IDs in text
-- Computes completion metrics for UI and status bar.
+- Computes completion metrics for UI and status bar
+- Also parses heading-style tasks (`### T1: Title`): collects subsequent `- [ ]`/`- [x]` lines as subtasks and derives parent completion state from them
+- Heading tasks may also carry an explicit checkbox (`### - [x] T1: Title`) which takes precedence over subtask derivation.
 
 #### CodeLens and traceability
 
 - `codeLensProvider.ts` maps source files to specs by glob and manual links
 - Adds requirement/task navigation lenses in requirements/tasks documents
-- Supports file-link extraction and inferred requirement mapping.
+- Supports file-link extraction and inferred requirement mapping
+- Does not render a "Referenced" lens when no implementation files are linked
+- For heading-style tasks: renders `$(circle-large-outline) Start task` when incomplete, `$(pass-filled) Task Completed` when all subtasks are checked.
 
 #### Copilot generation and autopilot
 
@@ -71,6 +75,17 @@ The extension is implemented as a VS Code extension centered around `activate()`
 - `hooksManager.ts` manages `.github/hooks/*.json` command entries
 - `mcpManager.ts` discovers server configs, parses JSONC, and toggles `enabled`.
 
+#### Start Task inline action
+
+- Incomplete task tree items expose a `$(play)` inline icon via `viewItem == task-incomplete` context menu condition in `package.json`.
+- The `copilot-specs.startTask` command accepts a task tree item; it resolves the spec name and task ID, then builds a focused prompt.
+- Prompt construction (in `autopilot.ts` or a new `src/copilot/taskStarter.ts`):
+  1. Load requirements and design doc text via `readTextFile`.
+  2. Resolve linked implementation files from `.copilot-specs-cache/<spec>.links.json`.
+  3. Compose a chat message containing spec name, task ID/title, requirement IDs, relevant requirement passages, design excerpt, and file paths.
+- Opens a Copilot Chat panel via `vscode.commands.executeCommand('workbench.action.chat.open', { query })` with the pre-populated prompt.
+- After the user closes or resolves the chat, a VS Code information message asks whether to mark the task complete; confirming calls `setTaskCompleted`.
+
 ## Key Modules
 
 - `src/extension.ts` — composition root, watchers, commands, lifecycle
@@ -82,6 +97,7 @@ The extension is implemented as a VS Code extension centered around `activate()`
 - `src/webview/specPanel.ts` — spec panel webview UI
 - `src/copilot/specGenerator.ts` — chat-based content generation
 - `src/autopilot.ts` — task-by-task implementation runner
+- `src/copilot/taskStarter.ts` — focused single-task chat prompt builder for the Start Task action
 - `src/steeringManager.ts` — managed steering sections in copilot instructions
 - `src/hooksManager.ts` — hooks listing and creation UX
 - `src/mcpManager.ts` — MCP server discovery and enable/disable mutation
@@ -104,4 +120,11 @@ The extension is implemented as a VS Code extension centered around `activate()`
 
 - Should autopilot support structured patch format in addition to full-file replacement?
 - Should hook management validate command safety or timeout defaults before save?
-- Should spec panel render interactive task controls from parsed tasks rather than markdown HTML alone?
+
+## Decisions
+
+- **Spec panel task rendering:** The tasks tab SHALL be rendered from the parsed `Task[]` model rather than from `marked.parse()` on the raw markdown. `marked` emits `<input type="checkbox" disabled>` for GFM checkboxes, which silently breaks the `toggleTask()` / `data-task` wiring already present. Rendering from the model allows each task row to receive an enabled checkbox with the correct `data-task` attribute and `onclick` handler.
+
+- **Preserve completed states on regenerate:** When `generateFullSpec` or `@spec regenerate tasks` overwrites the tasks file, completed task IDs are captured before the write and reapplied afterwards via `applyCompletedIds`. This prevents generation from resetting user progress.
+
+- **Heading-style task CodeLens consistency:** For `###`-headed task docs (used by third-party specs), the CodeLens layer uses `$(circle-large-outline)` for incomplete tasks and `$(pass-filled)` for complete ones to provide a visual checkbox metaphor without requiring inline `[ ]` syntax on the heading line itself.

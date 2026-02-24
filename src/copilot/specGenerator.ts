@@ -1,19 +1,22 @@
-import * as vscode from 'vscode';
-import { createSpec } from '../specManager.js';
-import { readSteeringForContext } from '../steeringManager.js';
+import * as vscode from "vscode";
+import { createSpec } from "../specManager.js";
+import { readSteeringForContext } from "../steeringManager.js";
+import { loadTasks, applyCompletedIds } from "../taskManager.js";
 
 export async function generateSpecContent(
   specName: string,
   fileGlob: string,
   existingContext: string,
-  section: 'requirements' | 'design' | 'tasks',
-  stream: vscode.ChatResponseStream
+  section: "requirements" | "design" | "tasks",
+  stream: vscode.ChatResponseStream,
 ): Promise<string> {
-  const models = await vscode.lm.selectChatModels({ family: 'gpt-4o' });
+  const models = await vscode.lm.selectChatModels({ family: "gpt-4o" });
   const model = models[0];
   if (!model) {
-    stream.markdown('\n> **Error:** No Copilot model available. Make sure GitHub Copilot Chat is installed.\n');
-    return '';
+    stream.markdown(
+      "\n> **Error:** No Copilot model available. Make sure GitHub Copilot Chat is installed.\n",
+    );
+    return "";
   }
 
   const steering = await readSteeringForContext();
@@ -40,7 +43,7 @@ Respond with ONLY the Markdown body (no frontmatter). Be specific and testable.`
 You are a software architect. Generate a design document for a feature called "${specName}".
 The feature affects files matching: \`${fileGlob}\`.
 
-${existingContext ? `Requirements context:\n${existingContext}\n` : ''}
+${existingContext ? `Requirements context:\n${existingContext}\n` : ""}
 
 Structure the document with:
 1. Architecture Overview
@@ -57,7 +60,7 @@ Respond with ONLY the Markdown body (no frontmatter). Be specific and technical.
 You are a software architect. Generate a task breakdown for implementing the feature "${specName}".
 The feature affects files matching: \`${fileGlob}\`.
 
-${existingContext ? `Context:\n${existingContext}\n` : ''}
+${existingContext ? `Context:\n${existingContext}\n` : ""}
 
 Rules:
 - Use checkbox format: \`- [ ] <!-- task:T1 --> Task title\`
@@ -72,14 +75,14 @@ Respond with ONLY the Markdown body (no frontmatter).`,
 
   const systemMessage = steering
     ? `You are a helpful engineering assistant. Project context:\n\n${steering}`
-    : 'You are a helpful engineering assistant.';
+    : "You are a helpful engineering assistant.";
 
   const messages = [
     vscode.LanguageModelChatMessage.Assistant(systemMessage),
     vscode.LanguageModelChatMessage.User(sectionPrompts[section]),
   ];
 
-  let result = '';
+  let result = "";
   try {
     const response = await model.sendRequest(messages, {});
     for await (const chunk of response.text) {
@@ -96,9 +99,17 @@ Respond with ONLY the Markdown body (no frontmatter).`,
 export async function generateFullSpec(
   specName: string,
   fileGlob: string,
-  stream: vscode.ChatResponseStream
+  stream: vscode.ChatResponseStream,
 ): Promise<void> {
-  stream.markdown(`## Creating spec: **${specName}**\n\nGlob: \`${fileGlob}\`\n\n`);
+  stream.markdown(
+    `## Creating spec: **${specName}**\n\nGlob: \`${fileGlob}\`\n\n`,
+  );
+
+  // Capture existing completed task IDs before overwriting so we can restore them
+  const { tasks: existingTasks } = await loadTasks(specName);
+  const completedIds = new Set(
+    existingTasks.filter((t) => t.completed).map((t) => t.id),
+  );
 
   // Scaffold the files first
   try {
@@ -109,41 +120,74 @@ export async function generateFullSpec(
   }
 
   // Generate requirements
-  stream.markdown('### Requirements\n\n');
+  stream.markdown("### Requirements\n\n");
   const requirementsContent = await generateSpecContent(
-    specName, fileGlob, '', 'requirements', stream
+    specName,
+    fileGlob,
+    "",
+    "requirements",
+    stream,
   );
 
-  stream.markdown('\n\n### Design\n\n');
+  stream.markdown("\n\n### Design\n\n");
   const designContent = await generateSpecContent(
-    specName, fileGlob, requirementsContent, 'design', stream
+    specName,
+    fileGlob,
+    requirementsContent,
+    "design",
+    stream,
   );
 
-  stream.markdown('\n\n### Tasks\n\n');
+  stream.markdown("\n\n### Tasks\n\n");
   const combinedContext = `Requirements:\n${requirementsContent}\n\nDesign:\n${designContent}`;
-  const tasksGeneratedContent = await generateSpecContent(specName, fileGlob, combinedContext, 'tasks', stream);
+  const tasksGeneratedContent = await generateSpecContent(
+    specName,
+    fileGlob,
+    combinedContext,
+    "tasks",
+    stream,
+  );
 
   // Write generated content to files
-  const { writeTextFile } = await import('../utils/fileSystem.js');
-  const { requirementsUri, designUri, tasksUri } = await import('../utils/fileSystem.js');
-  const { serializeFrontmatter } = await import('../utils/frontmatter.js');
+  const { writeTextFile } = await import("../utils/fileSystem.js");
+  const { requirementsUri, designUri, tasksUri } =
+    await import("../utils/fileSystem.js");
+  const { serializeFrontmatter } = await import("../utils/frontmatter.js");
 
   const reqUri = requirementsUri(specName);
   const dUri = designUri(specName);
   const taskFileUri = tasksUri(specName);
 
   if (reqUri) {
-    const fm = { name: `${specName} Requirements`, applyTo: fileGlob, description: `Requirements for the ${specName} feature` };
+    const fm = {
+      name: `${specName} Requirements`,
+      applyTo: fileGlob,
+      description: `Requirements for the ${specName} feature`,
+    };
     await writeTextFile(reqUri, serializeFrontmatter(fm, requirementsContent));
   }
   if (dUri) {
-    const fm = { name: `${specName} Design`, applyTo: fileGlob, description: `Architecture and design for the ${specName} feature` };
+    const fm = {
+      name: `${specName} Design`,
+      applyTo: fileGlob,
+      description: `Architecture and design for the ${specName} feature`,
+    };
     await writeTextFile(dUri, serializeFrontmatter(fm, designContent));
   }
   if (taskFileUri && tasksGeneratedContent) {
-    await writeTextFile(taskFileUri, tasksGeneratedContent);
+    const finalTasksContent =
+      completedIds.size > 0
+        ? applyCompletedIds(tasksGeneratedContent, completedIds, specName)
+        : tasksGeneratedContent;
+    await writeTextFile(taskFileUri, finalTasksContent);
   }
 
-  stream.markdown(`\n\n---\n✅ Spec files created in \`.github/instructions/specs/${specName}/\` and \`.github/specs/${specName}/\`\n`);
-  stream.button({ command: 'copilot-specs.openSpecPanel', arguments: [specName], title: 'Open Spec Panel' });
+  stream.markdown(
+    `\n\n---\n✅ Spec files created in \`.github/instructions/specs/${specName}/\` and \`.github/specs/${specName}/\`\n`,
+  );
+  stream.button({
+    command: "copilot-specs.openSpecPanel",
+    arguments: [specName],
+    title: "Open Spec Panel",
+  });
 }

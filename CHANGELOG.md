@@ -6,10 +6,17 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 
 ## [Unreleased]
 
+### Added
+
 ## [0.1.2] - 2026-02-23
 
 ### Added
 
+- **Heading-style task parsing** — `taskManager.ts` now recognises `### T1: Title` documents (used by third-party specs). Subsequent `- [ ]` / `- [x]` lines are collected as subtasks of the heading task; parent completion is derived from them. An explicit `### - [x] T1: Title` checkbox takes precedence.
+- **Start Task / Task Completed CodeLens on heading tasks** — heading-style task lines now show `$(circle-large-outline) Start task` when incomplete and `$(pass-filled) Task Completed` when all subtasks are checked, providing a visual checkbox metaphor consistent with checkbox-style tasks.
+- **`copilot-specs.startTask` command** — opens a focused Copilot Chat session pre-populated with spec name, task ID, task title, and linked requirement IDs; accessible from both the tree view inline button and the tasks document CodeLens.
+- **Rich Start Task prompt** (`src/copilot/taskStarter.ts`) — the chat prompt now includes the full requirement section text for each linked requirement ID, a design doc excerpt (architecture and core flows), and the paths of any linked implementation files.
+- **Post-chat mark-complete flow** — after the Start Task chat panel opens, a notification asks "Did Copilot complete task X? Mark it as done?". Confirming marks the parent task **and all its subtasks** as `[x]` in the markdown file and refreshes the explorer/status bar.
 - Unit test suite using `@vscode/test-cli` and mocha TDD — 32 tests covering `parseTasks`, `calculateProgress`, `parseFrontmatter`, `serializeFrontmatter`, and `stripFrontmatter` ([src/test/suite/](src/test/suite/)).
 - `.vscode-test.mjs` test runner configuration.
 - `npm test` now compiles TypeScript before running the test suite.
@@ -18,6 +25,11 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 ### Changed
 
 - Enhanced `.github/copilot-instructions.md` with additional steering-section sentinel markers and autopilot guidelines.
+
+### Fixed
+
+- **Generate with Copilot** (`@spec create` and `@spec regenerate tasks`) no longer resets already-completed tasks — existing `[x]` checkbox states are preserved when tasks are regenerated, matched by task ID.
+- Task document CodeLens no longer shows a `Referenced: <file>` lens for tasks that have no linked implementation files. The file lens is now only rendered when at least one implementation file is actually linked.
 
 ## [0.1.1] - 2026-02-23
 

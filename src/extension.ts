@@ -12,6 +12,7 @@ import {
 import {
   loadTasks,
   setTaskCompleted,
+  markTaskAndSubtasksCompleted,
   calculateProgress,
 } from "./taskManager.js";
 import {
@@ -263,7 +264,16 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // ── Chat Participant ─────────────────────────────────────────────────────────
 
-  registerChatParticipant(context);
+  registerChatParticipant(
+    context,
+    (specName, taskId) => {
+      codeLensProvider.setTaskInProgress(specName, taskId, true);
+    },
+    (specName, taskId) => {
+      codeLensProvider.setTaskInProgress(specName, taskId, false);
+      refreshAll();
+    },
+  );
 
   // ── Commands ─────────────────────────────────────────────────────────────────
 
@@ -366,6 +376,7 @@ export function activate(context: vscode.ExtensionContext): void {
         if (!task) {
           return;
         }
+        codeLensProvider.setTaskInProgress(task.specName, task.id, false);
         await setTaskCompleted(task.specName, task.id, true);
         refreshAll();
       },
@@ -555,6 +566,54 @@ export function activate(context: vscode.ExtensionContext): void {
             await runHook(pick.hook);
           }
         }
+      },
+    ],
+
+    [
+      "copilot-specs.startTask",
+      async (specNameOrItem?: unknown, taskId?: unknown) => {
+        // CodeLens passes (specName: string, taskId: string)
+        // Tree view inline button passes a TaskItem
+        let specName: string | undefined;
+        let id: string | undefined;
+        if (typeof specNameOrItem === "string" && typeof taskId === "string") {
+          specName = specNameOrItem;
+          id = taskId;
+        } else {
+          const task = resolveTask(specNameOrItem);
+          specName = task?.specName;
+          id = task?.id;
+        }
+        if (!specName || !id) {
+          return;
+        }
+        await vscode.commands.executeCommand("workbench.action.chat.open", {
+          query: `@spec implement ${specName} ${id}`,
+        });
+        // Spinner is set by onTaskStart and cleared by onTaskComplete in registerChatParticipant.
+      },
+    ],
+
+    [
+      "copilot-specs.markTaskComplete",
+      async (specNameArg?: unknown, taskIdArg?: unknown) => {
+        // Called from CodeLens with (specName, taskId) or from tree with a TaskItem
+        let specName: string | undefined;
+        let id: string | undefined;
+        if (typeof specNameArg === "string" && typeof taskIdArg === "string") {
+          specName = specNameArg;
+          id = taskIdArg;
+        } else {
+          const task = resolveTask(specNameArg);
+          specName = task?.specName;
+          id = task?.id;
+        }
+        if (!specName || !id) {
+          return;
+        }
+        codeLensProvider.setTaskInProgress(specName, id, false);
+        await markTaskAndSubtasksCompleted(specName, id, true);
+        refreshAll();
       },
     ],
 

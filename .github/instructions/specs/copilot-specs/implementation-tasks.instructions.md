@@ -28,11 +28,13 @@ applyTo: "src/**"
   - [x] Show file-level spec/task CodeLens for matched files
   - [x] Add requirements↔tasks CodeLens in instructions documents
   - [x] Implement task-to-file linking and auto-linking workflows
+  - [x] Remove spurious "Referenced: FILE" lens when no implementation files are linked
 
 - [x] **T5**: Add Copilot generation and autopilot execution <!-- requires:REQ-05 -->
   - [x] Create chat participant commands for create/regenerate flows
   - [x] Generate section content and persist to spec files
   - [x] Execute pending tasks via model responses and apply workspace edits
+  - [x] Preserve completed task states when regenerating tasks via `applyCompletedIds` / `preserveCompletedTaskStates`
 
 - [x] **T6**: Support steering, hooks, and MCP management <!-- requires:REQ-06 -->
   - [x] Read and append managed steering sections
@@ -50,3 +52,11 @@ applyTo: "src/**"
   - [ ] Add explicit validation feedback for malformed spec/task markdown
   - [ ] Add user-facing docs for hook and MCP config formats
   - [ ] Add tests for requirement inference and glob matching edge cases
+
+- [x] **T9**: Add "Start Task" inline action for incomplete tasks <!-- requires:REQ-07 -->
+  - [x] Register a `copilot-specs.startTask` command that opens a focused Copilot chat with pre-filled spec name, task ID, and title
+  - [x] Add `$(play)` inline button in the tree view next to each incomplete task item
+  - [x] Parse heading-style (`### T1: Title`) task documents: derive completion from child checkboxes
+  - [x] Show `$(circle-large-outline) Start task` / `$(pass-filled) Task Completed` CodeLens on heading-style task lines
+  - [x] Include full task context (requirements text, design doc excerpt, linked file paths) in the chat prompt
+  - [x] After the chat session completes, prompt the user to mark the task complete

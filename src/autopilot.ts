@@ -1,39 +1,53 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
-import { listSpecs } from './specManager.js';
-import { loadTasks, setTaskCompleted } from './taskManager.js';
-import { Task } from './models/index.js';
-import { readTextFile, requirementsUri, designUri, tasksUri, fileExists } from './utils/fileSystem.js';
-import { stripFrontmatter } from './utils/frontmatter.js';
-import { readSteeringForContext } from './steeringManager.js';
+import * as vscode from "vscode";
+import * as path from "path";
+import { listSpecs } from "./specManager.js";
+import { loadTasks, markTaskAndSubtasksCompleted } from "./taskManager.js";
+import { Task } from "./models/index.js";
+import {
+  readTextFile,
+  requirementsUri,
+  designUri,
+  tasksUri,
+  fileExists,
+} from "./utils/fileSystem.js";
+import { stripFrontmatter } from "./utils/frontmatter.js";
+import { readSteeringForContext } from "./steeringManager.js";
 
 export async function runAutopilot(): Promise<void> {
   const specs = await listSpecs();
   if (specs.length === 0) {
-    vscode.window.showInformationMessage('No specs found. Create a spec first with "Copilot Specs: New Spec".');
+    vscode.window.showInformationMessage(
+      'No specs found. Create a spec first with "Copilot Specs: New Spec".',
+    );
     return;
   }
 
   const specPick = await vscode.window.showQuickPick(
     specs.map((s) => ({ label: s.name, description: s.fileGlob })),
-    { placeHolder: 'Select a spec to execute with Autopilot' }
+    { placeHolder: "Select a spec to execute with Autopilot" },
   );
-  if (!specPick) { return; }
+  if (!specPick) {
+    return;
+  }
 
   const { tasks } = await loadTasks(specPick.label);
   const pending = tasks.filter((t) => !t.completed);
 
   if (pending.length === 0) {
-    vscode.window.showInformationMessage(`All tasks in "${specPick.label}" are already complete! 🎉`);
+    vscode.window.showInformationMessage(
+      `All tasks in "${specPick.label}" are already complete! 🎉`,
+    );
     return;
   }
 
   const confirmed = await vscode.window.showWarningMessage(
     `Autopilot will attempt to implement ${pending.length} task(s) in spec "${specPick.label}" using Copilot. Continue?`,
     { modal: true },
-    'Run Autopilot'
+    "Run Autopilot",
   );
-  if (confirmed !== 'Run Autopilot') { return; }
+  if (confirmed !== "Run Autopilot") {
+    return;
+  }
 
   await vscode.window.withProgress(
     {
@@ -43,7 +57,9 @@ export async function runAutopilot(): Promise<void> {
     },
     async (progress, cancelToken) => {
       for (let i = 0; i < pending.length; i++) {
-        if (cancelToken.isCancellationRequested) { break; }
+        if (cancelToken.isCancellationRequested) {
+          break;
+        }
 
         const task = pending[i];
         const increment = Math.round(100 / pending.length);
@@ -54,53 +70,61 @@ export async function runAutopilot(): Promise<void> {
 
         await executeTask(specPick.label, task, cancelToken);
 
-        if (cancelToken.isCancellationRequested) { break; }
+        if (cancelToken.isCancellationRequested) {
+          break;
+        }
       }
 
-      progress.report({ increment: 100, message: 'Done!' });
-    }
+      progress.report({ increment: 100, message: "Done!" });
+    },
   );
 }
 
 async function executeTask(
   specName: string,
   task: Task,
-  cancelToken: vscode.CancellationToken
+  cancelToken: vscode.CancellationToken,
 ): Promise<void> {
   const confirmEach = vscode.workspace
-    .getConfiguration('copilot-specs')
-    .get<boolean>('autopilotConfirmEachTask', true);
+    .getConfiguration("copilot-specs")
+    .get<boolean>("autopilotConfirmEachTask", true);
 
   // Build context from spec docs
   const context = await buildTaskContext(specName, task);
 
   // Select model
-  const models = await vscode.lm.selectChatModels({ family: 'gpt-4o' });
+  const models = await vscode.lm.selectChatModels({ family: "gpt-4o" });
   const model = models[0];
   if (!model) {
-    vscode.window.showWarningMessage('No Copilot model available. Skipping autopilot.');
+    vscode.window.showWarningMessage(
+      "No Copilot model available. Skipping autopilot.",
+    );
     return;
   }
 
   // Ask the model for an implementation plan
   const prompt = buildTaskPrompt(specName, task, context);
-  const messages = [
-    vscode.LanguageModelChatMessage.User(prompt),
-  ];
+  const messages = [vscode.LanguageModelChatMessage.User(prompt)];
 
-  let response = '';
+  let response = "";
   try {
     const lmResponse = await model.sendRequest(messages, {}, cancelToken);
     for await (const chunk of lmResponse.text) {
-      if (cancelToken.isCancellationRequested) { break; }
+      if (cancelToken.isCancellationRequested) {
+        break;
+      }
       response += chunk;
     }
   } catch (err) {
-    vscode.window.showErrorMessage(`Autopilot error on task "${task.title}": ${err}`);
+    vscode.window.showErrorMessage(
+      `Autopilot error on task "${task.title}": ${err}`,
+    );
     return;
   }
 
-  if (cancelToken.isCancellationRequested) { return; }
+  if (cancelToken.isCancellationRequested) {
+    return;
+  }
 
   if (confirmEach) {
     // Show the proposed implementation and ask for confirmation
@@ -111,50 +135,64 @@ async function executeTask(
 
     const action = await vscode.window.showInformationMessage(
       `Autopilot: Apply changes for task "${task.title}"?`,
-      'Apply & Complete',
-      'Mark Complete Only',
-      'Skip'
+      "Apply & Complete",
+      "Mark Complete Only",
+      "Skip",
     );
 
-    if (action === 'Skip') { return; }
-    if (action === 'Apply & Complete') {
+    if (action === "Skip") {
+      return;
+    }
+    if (action === "Apply & Complete") {
       await applyResponseAsEdit(response, task);
     }
   } else {
     await applyResponseAsEdit(response, task);
   }
 
-  // Mark task as complete
-  await setTaskCompleted(specName, task.id, true);
+  // Mark task and all subtasks as complete
+  await markTaskAndSubtasksCompleted(specName, task.id, true);
 }
 
-async function buildTaskContext(specName: string, _task: Task): Promise<string> {
+async function buildTaskContext(
+  specName: string,
+  _task: Task,
+): Promise<string> {
   const parts: string[] = [];
 
   const rUri = requirementsUri(specName);
   const dUri = designUri(specName);
   const tUri = tasksUri(specName);
 
-  if (rUri && await fileExists(rUri)) {
-    parts.push(`## Requirements\n${stripFrontmatter(await readTextFile(rUri))}`);
+  if (rUri && (await fileExists(rUri))) {
+    parts.push(
+      `## Requirements\n${stripFrontmatter(await readTextFile(rUri))}`,
+    );
   }
-  if (dUri && await fileExists(dUri)) {
+  if (dUri && (await fileExists(dUri))) {
     parts.push(`## Design\n${stripFrontmatter(await readTextFile(dUri))}`);
   }
-  if (tUri && await fileExists(tUri)) {
+  if (tUri && (await fileExists(tUri))) {
     parts.push(`## All Tasks\n${await readTextFile(tUri)}`);
   }
 
   const steering = await readSteeringForContext();
-  if (steering) { parts.push(`## Project Instructions\n${steering}`); }
+  if (steering) {
+    parts.push(`## Project Instructions\n${steering}`);
+  }
 
-  return parts.join('\n\n---\n\n');
+  return parts.join("\n\n---\n\n");
 }
 
-function buildTaskPrompt(specName: string, task: Task, context: string): string {
-  const subTaskList = task.subTasks.length > 0
-    ? `\nSub-tasks:\n${task.subTasks.map((s) => `- [${s.completed ? 'x' : ' '}] ${s.title}`).join('\n')}`
-    : '';
+function buildTaskPrompt(
+  specName: string,
+  task: Task,
+  context: string,
+): string {
+  const subTaskList =
+    task.subTasks.length > 0
+      ? `\nSub-tasks:\n${task.subTasks.map((s) => `- [${s.completed ? "x" : " "}] ${s.title}`).join("\n")}`
+      : "";
 
   return `You are an expert software engineer implementing a specific task as part of a larger feature spec.
 
@@ -176,7 +214,10 @@ Be concrete and complete. Do not use placeholder comments like "// existing code
 Only implement what is needed for this specific task.`;
 }
 
-async function applyResponseAsEdit(response: string, task: Task): Promise<void> {
+async function applyResponseAsEdit(
+  response: string,
+  task: Task,
+): Promise<void> {
   // Extract file blocks from response: FILE: path\n```lang\ncontent\n```
   const fileBlockRegex = /FILE:\s*(.+?)\n```[^\n]*\n([\s\S]*?)```/g;
   let match: RegExpExecArray | null;
@@ -188,12 +229,16 @@ async function applyResponseAsEdit(response: string, task: Task): Promise<void> 
 
   if (edits.length === 0) {
     // No structured file edits — just show in output
-    vscode.window.showInformationMessage(`Task "${task.title}": No file edits detected. Check the Autopilot output channel.`);
+    vscode.window.showInformationMessage(
+      `Task "${task.title}": No file edits detected. Check the Autopilot output channel.`,
+    );
     return;
   }
 
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-  if (!workspaceRoot) { return; }
+  if (!workspaceRoot) {
+    return;
+  }
 
   const wsEdit = new vscode.WorkspaceEdit();
   for (const { filePath, content } of edits) {
@@ -216,10 +261,7 @@ async function applyResponseAsEdit(response: string, task: Task): Promise<void> 
     }
 
     wsEdit.set(uri, [
-      new vscode.TextEdit(
-        new vscode.Range(0, 0, 99999, 0),
-        content
-      ),
+      new vscode.TextEdit(new vscode.Range(0, 0, 99999, 0), content),
     ]);
   }
 
