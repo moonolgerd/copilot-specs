@@ -364,7 +364,7 @@ export class SpecCodeLensProvider implements vscode.CodeLensProvider {
             tooltip: `Task ${task.id} is being worked on`,
           }),
         );
-      } else if (task.completed && isHeadingTask) {
+      } else if (task.completed) {
         lenses.push(
           new vscode.CodeLens(range, {
             title: "$(pass-filled)  Task Completed",
