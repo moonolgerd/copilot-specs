@@ -3,7 +3,7 @@
   "displayName": "Copilot Specs",
   "description": "Spec-driven development with GitHub Copilot — requirements, design, and task tracking linked to your code.",
   "version": "0.1.0",
-  "publisher": "copilot-specs",
+  "publisher": "moonolgerd",
   "repository": {
     "type": "git",
     "url": "https://github.com/moonolgerd/copilot-specs.git"
@@ -24,6 +24,7 @@
     "workspaceContains:.github"
   ],
   "main": "./dist/extension.js",
+  "icon": "media/icon.png",
   "contributes": {
     "commands": [
       {

@@ -4,31 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project follows Semantic Versioning.
 
-## [Unreleased]
+## [0.1.1] - 2026-02-23
 
 ### Added
 
-- 
-
-### Changed
-
-- 
-
-### Deprecated
-
-- 
-
-### Removed
-
-- 
-
-### Fixed
-
-- 
-
-### Security
-
-- 
+- Extension icon (`media/icon.png`) — 256×256 PNG based on the `$(tasklist)` codicon, displayed in VS Marketplace and the Extensions panel.
 
 ## [0.1.0] - 2026-02-23
 
