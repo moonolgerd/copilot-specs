@@ -39,4 +39,5 @@ If a token is missing, its publish step is skipped.
 1. Run `Release` workflow from GitHub Actions
 2. Select `publish_target`:
    - `dry-run`
-  - `marketplace`
+
+- `marketplace`
