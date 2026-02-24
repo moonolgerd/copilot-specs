@@ -78,11 +78,15 @@ Frontmatter fields (YAML): `name`, `applyTo`, `description`.
 ## Steering (copilot-instructions.md) Sections
 
 Managed blocks use sentinel comments:
+
 ```markdown
 <!-- copilot-specs:steering:start -->
+
 ...content managed by steeringManager...
+
 <!-- copilot-specs:steering:end -->
 ```
+
 Do not remove or reorder these markers. `steeringManager.ts` replaces content between them programmatically.
 
 ---
@@ -90,12 +94,14 @@ Do not remove or reorder these markers. `steeringManager.ts` replaces content be
 ## Autopilot FILE Blocks
 
 When `specGenerator.ts` or the autopilot runs, model output must produce changes using `FILE:` blocks:
-```
+
+````
 FILE: src/example.ts
 ```typescript
 // full file content
-```
-```
+````
+
+````
 `autopilot.ts` parses these blocks and applies them as a `vscode.WorkspaceEdit`. Do not embed partial diffs — always emit the complete file content.
 
 ---
@@ -121,7 +127,8 @@ Build output: `dist/extension.js` (CJS, target node18, `vscode` externalized).
 - **Always add `.js` extension to relative imports** (Node16 ESM resolution):
   ```typescript
   import { parseFrontmatter } from "./utils/frontmatter.js";
-  ```
+````
+
 - All shared types live in `src/models/index.ts` — add new interfaces there.
 - Use `vscode.lm.selectChatModels({ family: "gpt-4o" })` for LLM calls; do not hard-code model IDs.
 
