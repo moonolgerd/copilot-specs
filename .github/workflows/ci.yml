@@ -29,3 +29,5 @@ jobs:
 
                         - name: Bundle extension
                           run: npm run bundle
+                        - name: Run tests
+                          run: xvfb-run -a npm test

@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/moonolgerd/copilot-specs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/moonolgerd/copilot-specs/actions/workflows/ci.yml)
 [![Release](https://github.com/moonolgerd/copilot-specs/actions/workflows/release.yml/badge.svg)](https://github.com/moonolgerd/copilot-specs/actions/workflows/release.yml)
+[![VS Marketplace](https://img.shields.io/visual-studio-marketplace/v/moonolgerd.copilot-specs?label=VS%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=moonolgerd.copilot-specs)
 
 Spec-driven development for VS Code + GitHub Copilot.
 
@@ -125,7 +126,6 @@ Manual release is also available through the GitHub Actions UI.
 - `src/templates/` — default spec templates
 - `.github/instructions/specs/` — generated/managed spec docs in a workspace
 - `.github/hooks/` — hook JSON definitions
-- `.copilot-specs-cache/` — task link cache files
 
 ## License
 

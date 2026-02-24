@@ -10,6 +10,9 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 
 ### Added
 
+- Unit test suite using `@vscode/test-cli` and mocha TDD — 32 tests covering `parseTasks`, `calculateProgress`, `parseFrontmatter`, `serializeFrontmatter`, and `stripFrontmatter` ([src/test/suite/](src/test/suite/)).
+- `.vscode-test.mjs` test runner configuration.
+- `npm test` now compiles TypeScript before running the test suite.
 - AI agent coding instructions (`.github/copilot-instructions.md`) — architecture overview, storage layout, task/requirement conventions, file-system rules, autopilot `FILE:` block format, build commands, and TypeScript conventions.
 
 ### Changed

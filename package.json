@@ -385,7 +385,7 @@
     "bundle": "node esbuild.js --production",
     "dev": "node esbuild.js --watch",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "npm run compile && vscode-test"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
