@@ -144,10 +144,10 @@ async function executeTask(
       return;
     }
     if (action === "Apply & Complete") {
-      await applyResponseAsEdit(response, task);
+      await applyResponseAsEdit(response, task.title);
     }
   } else {
-    await applyResponseAsEdit(response, task);
+    await applyResponseAsEdit(response, task.title);
   }
 
   // Mark task and all subtasks as complete
@@ -214,9 +214,9 @@ Be concrete and complete. Do not use placeholder comments like "// existing code
 Only implement what is needed for this specific task.`;
 }
 
-async function applyResponseAsEdit(
+export async function applyResponseAsEdit(
   response: string,
-  task: Task,
+  taskTitle: string,
 ): Promise<void> {
   // Extract file blocks from response: FILE: path\n```lang\ncontent\n```
   const fileBlockRegex = /FILE:\s*(.+?)\n```[^\n]*\n([\s\S]*?)```/g;
@@ -230,7 +230,7 @@ async function applyResponseAsEdit(
   if (edits.length === 0) {
     // No structured file edits — just show in output
     vscode.window.showInformationMessage(
-      `Task "${task.title}": No file edits detected. Check the Autopilot output channel.`,
+      `Task "${taskTitle}": No file edits detected. Check the Autopilot output channel.`,
     );
     return;
   }

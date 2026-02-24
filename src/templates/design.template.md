@@ -1,7 +1,6 @@
 ---
-name: "{{SPEC_NAME}} Design"
+name: { { SPEC_NAME } }
 applyTo: "{{FILE_GLOB}}"
-description: "Architecture and design for the {{SPEC_NAME}} feature"
 ---
 
 # {{SPEC_NAME}} — Design

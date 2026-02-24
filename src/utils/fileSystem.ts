@@ -47,6 +47,26 @@ export async function ensureDir(uri: vscode.Uri): Promise<void> {
   }
 }
 
+/**
+ * Adds `entry` to the workspace .gitignore if not already present.
+ */
+export async function ensureGitignoreEntry(entry: string): Promise<void> {
+  const uri = resolveWorkspacePath(".gitignore");
+  if (!uri) {
+    return;
+  }
+  let content = "";
+  if (await fileExists(uri)) {
+    content = await readTextFile(uri);
+    const lines = content.split(/\r?\n/);
+    if (lines.some((l) => l.trim() === entry)) {
+      return;
+    }
+  }
+  const separator = content.length > 0 && !content.endsWith("\n") ? "\n" : "";
+  await writeTextFile(uri, `${content}${separator}${entry}\n`);
+}
+
 export async function listDirectories(uri: vscode.Uri): Promise<string[]> {
   try {
     const entries = await vscode.workspace.fs.readDirectory(uri);
@@ -95,6 +115,29 @@ export const SKILLS_DIR = ".github/skills";
 export const HOOKS_DIR = ".github/hooks";
 export const PROMPTS_SPECS_DIR = ".github/prompts/specs";
 export const COPILOT_INSTRUCTIONS_FILE = ".github/copilot-instructions.md";
+
+/**
+ * List top-level instruction/rules files under .github/instructions/ (excludes specs subdir).
+ */
+export async function listInstructionRulesFiles(): Promise<
+  { name: string; uri: vscode.Uri }[]
+> {
+  const dir = resolveWorkspacePath(INSTRUCTIONS_DIR);
+  if (!dir || !(await fileExists(dir))) {
+    return [];
+  }
+  const entries = await vscode.workspace.fs.readDirectory(dir);
+  return entries
+    .filter(
+      ([name, type]) =>
+        type === vscode.FileType.File && name.endsWith(".instructions.md"),
+    )
+    .map(([name]) => ({
+      name: name.replace(/\.instructions\.md$/, ""),
+      uri: vscode.Uri.joinPath(dir, name),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
 
 /**
  * List all skill files under .github/skills/.

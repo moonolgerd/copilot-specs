@@ -56,10 +56,13 @@ import {
 } from "./mcpManager.js";
 import {
   INSTRUCTIONS_SPECS_DIR,
+  INSTRUCTIONS_DIR,
   HOOKS_DIR,
   copilotInstructionsUri,
   fileExists,
   listSkillFiles,
+  listInstructionRulesFiles,
+  ensureGitignoreEntry,
 } from "./utils/fileSystem.js";
 import { Task } from "./models/index.js";
 
@@ -70,6 +73,8 @@ export function activate(context: vscode.ExtensionContext): void {
   initTemplates(extensionPath);
   initHooks(extensionPath);
 
+  // Ensure cache directory is gitignored
+  void ensureGitignoreEntry(".copilot-specs-cache/");
   // ── Providers ───────────────────────────────────────────────────────────────
 
   const specProvider = new SpecProvider();
@@ -85,6 +90,10 @@ export function activate(context: vscode.ExtensionContext): void {
         items.push({ name: e.name, filePath: e.filePath });
       }
       return items;
+    },
+    async () => {
+      const rules = await listInstructionRulesFiles();
+      return rules.map((r) => ({ name: r.name, filePath: r.uri.fsPath }));
     },
     async () => {
       const skills = await listSkillFiles();
@@ -219,6 +228,9 @@ export function activate(context: vscode.ExtensionContext): void {
   makeWatcher(".mcp.json", () => mcpServersProvider.refresh());
   makeWatcher("mcp.json", () => mcpServersProvider.refresh());
   makeWatcher(".github/copilot-instructions.md", () =>
+    steeringProvider.refresh(),
+  );
+  makeWatcher(`${INSTRUCTIONS_DIR}/*.instructions.md`, () =>
     steeringProvider.refresh(),
   );
   makeWatcher(".github/skills/**", () => steeringProvider.refresh());

@@ -1,7 +1,6 @@
 ---
-name: "{{SPEC_NAME}} Requirements"
+name: { { SPEC_NAME } }
 applyTo: "{{FILE_GLOB}}"
-description: "Requirements for the {{SPEC_NAME}} feature"
 ---
 
 # {{SPEC_NAME}} — Requirements

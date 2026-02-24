@@ -134,13 +134,13 @@
       },
       {
         "command": "copilot-specs.newSteering",
-        "title": "New Steering Entry",
+        "title": "New Rules or Skill",
         "category": "Copilot Specs",
         "icon": "$(add)"
       },
       {
         "command": "copilot-specs.editSteering",
-        "title": "Edit Steering Instructions",
+        "title": "Edit Instructions File",
         "category": "Copilot Specs",
         "icon": "$(edit)"
       },
@@ -212,8 +212,8 @@
         },
         {
           "id": "copilot-specs.steeringExplorer",
-          "name": "Agent Steering & Skills",
-          "contextualTitle": "Agent Steering & Skills"
+          "name": "Instructions & Skills",
+          "contextualTitle": "Instructions & Skills"
         },
         {
           "id": "copilot-specs.hooksExplorer",

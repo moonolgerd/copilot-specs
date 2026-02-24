@@ -14,6 +14,7 @@ import {
 } from "../utils/fileSystem.js";
 import { stripFrontmatter } from "../utils/frontmatter.js";
 import { buildStartTaskPrompt } from "./taskStarter.js";
+import { applyResponseAsEdit } from "../autopilot.js";
 
 interface ParsedCommand {
   action: "create" | "regenerate" | "implement" | "help";
@@ -115,9 +116,12 @@ export function registerChatParticipant(
             {},
             token,
           );
+          let fullResponse = "";
           for await (const chunk of lmResponse.text) {
+            fullResponse += chunk;
             stream.markdown(chunk);
           }
+          await applyResponseAsEdit(fullResponse, taskId);
         } catch (err) {
           stream.markdown(`> Error generating implementation: ${err}`);
           return;

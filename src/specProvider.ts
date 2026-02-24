@@ -119,7 +119,7 @@ export class SpecProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
   }
 }
 
-// ── Agent Steering & Skills Explorer ──────────────────────────────────────────
+// ── Instructions, Rules & Skills Explorer ───────────────────────────────────
 
 export class SteeringItem extends vscode.TreeItem {
   constructor(
@@ -155,6 +155,42 @@ export class SkillItem extends vscode.TreeItem {
   }
 }
 
+export class RulesFileItem extends vscode.TreeItem {
+  constructor(
+    public readonly name: string,
+    public readonly filePath: string,
+  ) {
+    super(name, vscode.TreeItemCollapsibleState.None);
+    this.contextValue = "rulesFile";
+    this.iconPath = new vscode.ThemeIcon("symbol-ruler");
+    this.resourceUri = vscode.Uri.file(filePath);
+    this.command = {
+      command: "vscode.open",
+      title: "Open Rules File",
+      arguments: [vscode.Uri.file(filePath)],
+    };
+  }
+}
+
+export class SectionItem extends vscode.TreeItem {
+  constructor(
+    public readonly kind: "instructions" | "rules" | "skills",
+    label: string,
+    icon: string,
+    childCount: number,
+  ) {
+    super(
+      label,
+      childCount > 0
+        ? vscode.TreeItemCollapsibleState.Expanded
+        : vscode.TreeItemCollapsibleState.None,
+    );
+    this.contextValue = `section-${kind}`;
+    this.iconPath = new vscode.ThemeIcon(icon);
+    this.description = childCount > 0 ? `${childCount}` : "";
+  }
+}
+
 export class SteeringProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<
     vscode.TreeItem | undefined | void
@@ -162,7 +198,10 @@ export class SteeringProvider implements vscode.TreeDataProvider<vscode.TreeItem
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   constructor(
-    private readonly getSteeringEntries: () => Promise<
+    private readonly getInstructions: () => Promise<
+      { name: string; filePath: string }[]
+    >,
+    private readonly getRules: () => Promise<
       { name: string; filePath: string }[]
     >,
     private readonly getSkills: () => Promise<
@@ -179,25 +218,42 @@ export class SteeringProvider implements vscode.TreeDataProvider<vscode.TreeItem
   }
 
   async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
+    if (element instanceof SectionItem) {
+      switch (element.kind) {
+        case "instructions":
+          return (await this.getInstructions()).map(
+            (e) => new SteeringItem(e.name, e.filePath),
+          );
+        case "rules":
+          return (await this.getRules()).map(
+            (r) => new RulesFileItem(r.name, r.filePath),
+          );
+        case "skills":
+          return (await this.getSkills()).map(
+            (s) => new SkillItem(s.name, s.filePath),
+          );
+      }
+    }
     if (element) {
       return [];
     }
 
-    const [steeringEntries, skills] = await Promise.all([
-      this.getSteeringEntries(),
+    const [instructions, rules, skills] = await Promise.all([
+      this.getInstructions(),
+      this.getRules(),
       this.getSkills(),
     ]);
 
-    const items: vscode.TreeItem[] = [];
-
-    for (const e of steeringEntries) {
-      items.push(new SteeringItem(e.name, e.filePath));
-    }
-    for (const s of skills) {
-      items.push(new SkillItem(s.name, s.filePath));
-    }
-
-    return items;
+    return [
+      new SectionItem(
+        "instructions",
+        "Instructions",
+        "book",
+        instructions.length,
+      ),
+      new SectionItem("rules", "Rules", "symbol-ruler", rules.length),
+      new SectionItem("skills", "Skills", "sparkle", skills.length),
+    ];
   }
 }
 

@@ -1,3 +1,8 @@
+---
+name: { { SPEC_NAME } }
+applyTo: "{{FILE_GLOB}}"
+---
+
 # {{SPEC_NAME}} — Tasks
 
 <!-- files: {{FILE_GLOB}} -->
