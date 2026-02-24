@@ -1,0 +1,395 @@
+{
+  "name": "copilot-specs",
+  "displayName": "Copilot Specs",
+  "description": "Spec-driven development with GitHub Copilot — requirements, design, and task tracking linked to your code.",
+  "version": "0.1.0",
+  "publisher": "copilot-specs",
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "workspaceContains:.github"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "copilot-specs.newSpec",
+        "title": "New Spec",
+        "category": "Copilot Specs",
+        "icon": "$(add)"
+      },
+      {
+        "command": "copilot-specs.deleteSpec",
+        "title": "Delete Spec",
+        "category": "Copilot Specs",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "copilot-specs.renameSpec",
+        "title": "Rename Spec",
+        "category": "Copilot Specs"
+      },
+      {
+        "command": "copilot-specs.openSpecPanel",
+        "title": "Open Spec Panel",
+        "category": "Copilot Specs",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "copilot-specs.generateWithCopilot",
+        "title": "Generate with Copilot",
+        "category": "Copilot Specs",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "copilot-specs.runAllTasks",
+        "title": "Run All Tasks (Autopilot)",
+        "category": "Copilot Specs",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "copilot-specs.checkTask",
+        "title": "Mark Task Complete",
+        "category": "Copilot Specs"
+      },
+      {
+        "command": "copilot-specs.uncheckTask",
+        "title": "Mark Task Incomplete",
+        "category": "Copilot Specs"
+      },
+      {
+        "command": "copilot-specs.linkFileToTask",
+        "title": "Link Current File to Task",
+        "category": "Copilot Specs",
+        "icon": "$(link)"
+      },
+      {
+        "command": "copilot-specs.linkExistingTaskToImplementation",
+        "title": "Auto-Link Tasks to Implementation",
+        "category": "Copilot Specs",
+        "icon": "$(references)"
+      },
+      {
+        "command": "copilot-specs.openTaskImplementations",
+        "title": "Open Task Implementations",
+        "category": "Copilot Specs",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "copilot-specs.openTaskInTasksDocument",
+        "title": "Open Task In Tasks Document",
+        "category": "Copilot Specs",
+        "icon": "$(list-selection)"
+      },
+      {
+        "command": "copilot-specs.openRequirementTasks",
+        "title": "Show Tasks For Requirement",
+        "category": "Copilot Specs",
+        "icon": "$(list-selection)"
+      },
+      {
+        "command": "copilot-specs.openTaskRequirements",
+        "title": "Show Requirements For Task",
+        "category": "Copilot Specs",
+        "icon": "$(list-selection)"
+      },
+      {
+        "command": "copilot-specs.openTaskReferencedFiles",
+        "title": "Open Referenced Task Files",
+        "category": "Copilot Specs",
+        "icon": "$(file)"
+      },
+      {
+        "command": "copilot-specs.showRequirementTaskMap",
+        "title": "Debug: Requirement Task Map",
+        "category": "Copilot Specs",
+        "icon": "$(debug)"
+      },
+      {
+        "command": "copilot-specs.newSteering",
+        "title": "New Steering Entry",
+        "category": "Copilot Specs",
+        "icon": "$(add)"
+      },
+      {
+        "command": "copilot-specs.editSteering",
+        "title": "Edit Steering Instructions",
+        "category": "Copilot Specs",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "copilot-specs.newHook",
+        "title": "New Agent Hook",
+        "category": "Copilot Specs",
+        "icon": "$(add)"
+      },
+      {
+        "command": "copilot-specs.runHook",
+        "title": "Run Hook Manually",
+        "category": "Copilot Specs",
+        "icon": "$(run)"
+      },
+      {
+        "command": "copilot-specs.autopilot",
+        "title": "Autopilot: Execute All Tasks",
+        "category": "Copilot Specs",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "copilot-specs.refreshExplorer",
+        "title": "Refresh",
+        "category": "Copilot Specs",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "copilot-specs.openMcpConfig",
+        "title": "Open MCP Config",
+        "category": "Copilot Specs",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "copilot-specs.focusMcpPane",
+        "title": "Focus MCP Servers Pane",
+        "category": "Copilot Specs",
+        "icon": "$(panel-bottom)"
+      },
+      {
+        "command": "copilot-specs.toggleMcpServer",
+        "title": "Toggle MCP Server",
+        "category": "Copilot Specs",
+        "icon": "$(sync)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "copilot-specs-container",
+          "title": "Copilot Specs",
+          "icon": "$(tasklist)"
+        }
+      ],
+      "panel": [
+        {
+          "id": "copilot-specs-mcp-container",
+          "title": "MCP Servers",
+          "icon": "$(plug)"
+        }
+      ]
+    },
+    "views": {
+      "copilot-specs-container": [
+        {
+          "id": "copilot-specs.specExplorer",
+          "name": "Specs",
+          "contextualTitle": "Copilot Specs"
+        },
+        {
+          "id": "copilot-specs.steeringExplorer",
+          "name": "Agent Steering & Skills",
+          "contextualTitle": "Agent Steering & Skills"
+        },
+        {
+          "id": "copilot-specs.hooksExplorer",
+          "name": "Agent Hooks",
+          "contextualTitle": "Agent Hooks"
+        },
+        {
+          "id": "copilot-specs.mcpServersExplorerSidebar",
+          "name": "MCP Servers",
+          "contextualTitle": "Workspace & User MCP Servers",
+          "visibility": "visible"
+        }
+      ],
+      "copilot-specs-mcp-container": [
+        {
+          "id": "copilot-specs.mcpServersExplorer",
+          "name": "MCP Servers",
+          "contextualTitle": "Workspace & User MCP Servers",
+          "visibility": "visible"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "copilot-specs.newSpec",
+          "when": "view == copilot-specs.specExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "copilot-specs.refreshExplorer",
+          "when": "view == copilot-specs.specExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "copilot-specs.linkExistingTaskToImplementation",
+          "when": "view == copilot-specs.specExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "copilot-specs.newSteering",
+          "when": "view == copilot-specs.steeringExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "copilot-specs.newHook",
+          "when": "view == copilot-specs.hooksExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "copilot-specs.refreshExplorer",
+          "when": "view == copilot-specs.mcpServersExplorerSidebar",
+          "group": "navigation"
+        },
+        {
+          "command": "copilot-specs.openMcpConfig",
+          "when": "view == copilot-specs.mcpServersExplorerSidebar",
+          "group": "navigation"
+        },
+        {
+          "command": "copilot-specs.refreshExplorer",
+          "when": "view == copilot-specs.mcpServersExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "copilot-specs.openMcpConfig",
+          "when": "view == copilot-specs.mcpServersExplorer",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "copilot-specs.openSpecPanel",
+          "when": "viewItem == spec",
+          "group": "inline"
+        },
+        {
+          "command": "copilot-specs.generateWithCopilot",
+          "when": "viewItem == spec",
+          "group": "inline"
+        },
+        {
+          "command": "copilot-specs.runAllTasks",
+          "when": "viewItem == spec",
+          "group": "1_actions@1"
+        },
+        {
+          "command": "copilot-specs.openSpecPanel",
+          "when": "viewItem == spec",
+          "group": "1_actions@2"
+        },
+        {
+          "command": "copilot-specs.generateWithCopilot",
+          "when": "viewItem == spec",
+          "group": "1_actions@3"
+        },
+        {
+          "command": "copilot-specs.renameSpec",
+          "when": "viewItem == spec",
+          "group": "2_manage@1"
+        },
+        {
+          "command": "copilot-specs.deleteSpec",
+          "when": "viewItem == spec",
+          "group": "2_manage@2"
+        },
+        {
+          "command": "copilot-specs.linkExistingTaskToImplementation",
+          "when": "viewItem == spec",
+          "group": "1_actions@4"
+        },
+        {
+          "command": "copilot-specs.checkTask",
+          "when": "viewItem == task-incomplete",
+          "group": "inline"
+        },
+        {
+          "command": "copilot-specs.uncheckTask",
+          "when": "viewItem == task-complete",
+          "group": "inline"
+        },
+        {
+          "command": "copilot-specs.runHook",
+          "when": "viewItem == hook",
+          "group": "inline"
+        },
+        {
+          "command": "copilot-specs.toggleMcpServer",
+          "when": "viewItem == mcpServer-enabled",
+          "group": "inline"
+        },
+        {
+          "command": "copilot-specs.toggleMcpServer",
+          "when": "viewItem == mcpServer-disabled",
+          "group": "inline"
+        }
+      ]
+    },
+    "chatParticipants": [
+      {
+        "id": "copilot-specs.spec",
+        "name": "spec",
+        "fullName": "Copilot Specs",
+        "description": "Create and manage feature specs. Try: @spec create auth feature for src/auth/**",
+        "isSticky": false
+      }
+    ],
+    "configuration": {
+      "title": "Copilot Specs",
+      "properties": {
+        "copilot-specs.autoOpenPanel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open the Spec Panel when a new spec is created."
+        },
+        "copilot-specs.hooksEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable agent hooks that run automatically on file save events."
+        },
+        "copilot-specs.autopilotConfirmEachTask": {
+          "type": "boolean",
+          "default": true,
+          "description": "Require confirmation before applying each task's code changes in autopilot mode."
+        },
+        "copilot-specs.defaultSpecTemplate": {
+          "type": "string",
+          "enum": [
+            "feature",
+            "bugfix"
+          ],
+          "default": "feature",
+          "description": "Default spec template to use when creating a new spec."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run bundle",
+    "compile": "tsc -p ./",
+    "bundle": "node esbuild.js --production",
+    "dev": "node esbuild.js --watch",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/mocha": "^10.0.9",
+    "@types/node": "^22.19.11",
+    "@types/vscode": "^1.93.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "marked": "^14.1.4"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "test-feature",
+  "fileGlob": "**/*",
+  "requirementsPath": ".github/instructions/specs/test-feature/requirements.instructions.md",
+  "designPath": ".github/instructions/specs/test-feature/design.instructions.md",
+  "tasksPath": ".github/instructions/specs/test-feature/implementation-tasks.instructions.md",
+  "linksPath": ".copilot-specs-cache/test-feature.links.json"
+}
