@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project follows Semantic Versioning.
 
+## [Unreleased]
+
+## [0.1.2] - 2026-02-23
+
+### Added
+
+- AI agent coding instructions (`.github/copilot-instructions.md`) — architecture overview, storage layout, task/requirement conventions, file-system rules, autopilot `FILE:` block format, build commands, and TypeScript conventions.
+
+### Changed
+
+- Enhanced `.github/copilot-instructions.md` with additional steering-section sentinel markers and autopilot guidelines.
+
 ## [0.1.1] - 2026-02-23
 
 ### Added
@@ -28,5 +40,7 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 - Release workflow for VSIX packaging and VS Marketplace publishing.
 - Repository documentation (`README.md`) and MIT license (`LICENSE`).
 
-[Unreleased]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/moonolgerd/copilot-specs/releases/tag/v0.1.0

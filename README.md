@@ -7,6 +7,12 @@ Spec-driven development for VS Code + GitHub Copilot.
 
 `copilot-specs` helps teams plan and implement features through structured **requirements**, **design**, and **implementation tasks** documents, then connect those documents back to real code with explorers, CodeLens, and automation.
 
+![alt text](media/image.png)
+
+![alt text](media/image-1.png)
+
+![alt text](media/image-2.png)
+
 ## Features
 
 - **Spec lifecycle**
