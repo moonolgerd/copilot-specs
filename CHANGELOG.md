@@ -4,9 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project follows Semantic Versioning.
 
-## [Unreleased]
+## [0.1.3] - 2026-02-23
 
 ### Added
+
+- **`@spec implement <spec> <taskId>` chat participant command** — typing `@spec implement my-spec T7` in Copilot Chat builds a rich context prompt (requirements text, design excerpt, linked file paths), streams the LM response, applies any `FILE:` block edits as a workspace edit, and marks the parent task and all subtasks complete automatically when the response finishes.
+- **`$(pass-filled) Task Completed` CodeLens on all completed parent tasks** — previously only shown on heading-style (`### Tn`) tasks; now also shown on `- [x] **Tn**` checkbox-style parent tasks.
+- **Instructions & Skills explorer** — the "Agent Steering & Skills" tree view is reorganised into three collapsible sections: **Instructions** (managed blocks in `copilot-instructions.md`), **Rules** (top-level `.github/instructions/*.instructions.md` files), and **Skills** (`.github/skills/`). Each section shows its child count and auto-expands when populated.
+- **New Rules or Skill flow** (replaces "New Steering Entry") — the `+` toolbar button now offers a two-item picker: create a new `.instructions.md` rules file under `.github/instructions/`, or a new `SKILL.md` skill under `.github/skills/<name>/`. Files are scaffolded with the correct frontmatter and opened in the editor.
+- **Auto-gitignore cache** — on activation the extension ensures `.copilot-specs-cache/` is present in the workspace `.gitignore`, creating the file if necessary and appending the entry idempotently.
+- `listInstructionRulesFiles()` utility in `fileSystem.ts` — lists top-level `.instructions.md` files in `.github/instructions/` (non-recursive, excludes the `specs/` subdirectory).
+
+### Changed
+
+- Spec file templates (`requirements`, `design`, `tasks`) now produce a consistent frontmatter header: `name: <spec-name>` and `applyTo: "<glob>"`. The tasks template previously had no frontmatter; the requirements and design templates previously included a `description` field and appended `" Requirements"` / `" Design"` to the `name` value.
+- `startTask` command no longer sets the in-progress spinner on button click — the spinner is now set by an `onTaskStart` callback at the top of the `@spec implement` handler, and cleared by `onTaskComplete` when the LM finishes. This prevents the spinner from getting stuck when the chat session does not route to the participant.
+
+### Fixed
+
+- In-progress spinner (`$(sync~spin)`) was permanently stuck after clicking "Start task" if the LM response never completed (e.g. wrong query format). Spinner lifecycle is now fully owned by the chat participant handler.
 
 ## [0.1.2] - 2026-02-23
 
