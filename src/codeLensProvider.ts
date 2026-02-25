@@ -55,6 +55,10 @@ function matchGlob(pattern: string, filePath: string): boolean {
 }
 
 /** Minimal glob match: supports ** and * wildcards */
+export function matchGlobPattern(str: string, glob: string): boolean {
+  return minimatch(str, glob);
+}
+
 function minimatch(str: string, glob: string): boolean {
   const regStr = glob
     .replace(/[.+^${}()|[\]\\]/g, "\\$&") // escape regex special chars except * and ?

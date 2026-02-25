@@ -127,6 +127,75 @@ Manual release is also available through the GitHub Actions UI.
 - `.github/instructions/specs/` — generated/managed spec docs in a workspace
 - `.github/hooks/` — hook JSON definitions
 
+## Hook JSON format
+
+Hook files live in `.github/hooks/*.json` in your workspace. Each file contains a top-level `hooks` object whose keys are event names and whose values are arrays of command entries.
+
+**Supported event names:** `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PreCompact`, `SubagentStart`, `SubagentStop`, `Stop`.
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "npm run lint",
+        "cwd": "${workspaceFolder}",
+        "timeout": 30000
+      }
+    ],
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "npm test",
+        "windows": "npm.cmd test",
+        "env": { "CI": "true" }
+      }
+    ]
+  }
+}
+```
+
+| Field     | Type        | Required | Description                                       |
+| --------- | ----------- | -------- | ------------------------------------------------- |
+| `type`    | `"command"` | yes      | Must be `"command"`                               |
+| `command` | string      | yes      | Shell command to run (default / Linux / macOS)    |
+| `windows` | string      | no       | Override command for Windows                      |
+| `linux`   | string      | no       | Override command for Linux                        |
+| `osx`     | string      | no       | Override command for macOS                        |
+| `cwd`     | string      | no       | Working directory (supports `${workspaceFolder}`) |
+| `env`     | object      | no       | Additional environment variables                  |
+| `timeout` | number      | no       | Timeout in milliseconds                           |
+
+## MCP server config format
+
+MCP server configurations are discovered from the following JSONC files (in priority order):
+
+- `.vscode/mcp.json` — workspace-level
+- `.mcp.json` — project-level
+- `mcp.json` — root-level
+
+Each file follows the VS Code MCP server schema:
+
+```jsonc
+{
+  "servers": {
+    "my-server": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "my-mcp-package"],
+      "env": { "API_KEY": "${env:MY_API_KEY}" },
+    },
+    "remote-server": {
+      "type": "sse",
+      "url": "https://example.com/mcp/sse",
+    },
+  },
+}
+```
+
+The Copilot Specs MCP explorer lists all discovered servers and lets you toggle them on/off via the tree view. Toggling sets or removes the server entry from the applicable config file.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

@@ -26,7 +26,7 @@ function normalizeRequirementId(value: string): string {
     .toUpperCase();
 }
 
-function extractRequirementIdsFromText(text: string): string[] {
+export function extractRequirementIdsFromText(text: string): string[] {
   const matches = text.match(/\b([A-Z]+-\d+(?:\.\d+)*|R\d+)\b/gi) ?? [];
   return [...new Set(matches.map((m) => normalizeRequirementId(m)))];
 }
@@ -405,4 +405,96 @@ export async function loadAllTasks(): Promise<Map<string, TasksParseResult>> {
   }
 
   return result;
+}
+
+export interface TaskValidationIssue {
+  /** 0-based line index */
+  line: number;
+  message: string;
+  severity: "error" | "warning";
+}
+
+/**
+ * Validates the markdown content of a spec tasks (or requirements) file and
+ * returns a list of diagnostics. The caller is responsible for converting
+ * these to VS Code Diagnostics.
+ */
+export function validateTaskMarkdown(content: string): TaskValidationIssue[] {
+  const issues: TaskValidationIssue[] = [];
+  const lines = content.split("\n");
+  const seenIds = new Map<string, number>();
+  let inFrontmatter = false;
+  let frontmatterDone = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].replace(/\r$/, "");
+
+    // Skip YAML frontmatter
+    if (!frontmatterDone) {
+      if (i === 0 && line.trim() === "---") {
+        inFrontmatter = true;
+        continue;
+      }
+      if (inFrontmatter) {
+        if (line.trim() === "---") {
+          inFrontmatter = false;
+          frontmatterDone = true;
+        }
+        continue;
+      }
+      frontmatterDone = true;
+    }
+
+    // Detect invalid checkbox markers, e.g. - [?] or - [y]
+    const checkboxCandidate = line.match(/^(\s*)-\s+\[(.{1})\]/);
+    if (checkboxCandidate) {
+      const marker = checkboxCandidate[2];
+      if (!/^(x|X| )$/.test(marker)) {
+        issues.push({
+          line: i,
+          message: `Invalid checkbox marker "[${marker}]" — use "[ ]" or "[x]".`,
+          severity: "error",
+        });
+      }
+    }
+
+    // Detect duplicate task IDs from <!-- task:ID --> comments
+    const idMatch = line.match(TASK_ID_COMMENT);
+    if (idMatch) {
+      const id = idMatch[1];
+      if (seenIds.has(id)) {
+        issues.push({
+          line: i,
+          message: `Duplicate task ID "${id}" — first defined on line ${(seenIds.get(id) ?? 0) + 1}.`,
+          severity: "error",
+        });
+      } else {
+        seenIds.set(id, i);
+      }
+    }
+
+    // Detect a requires-style HTML comment that has a space before the colon,
+    // which prevents the parser from recognising it (e.g. <!-- requires : REQ-01 -->)
+    const badRequires = line.match(/<!--\s*requires?\s+:\s*(.+?)\s*-->/);
+    if (badRequires) {
+      issues.push({
+        line: i,
+        message: `Malformed requires comment — remove the space before ":": use <!-- requires:${badRequires[1].trim()} -->.`,
+        severity: "warning",
+      });
+    }
+
+    // Detect unclosed HTML comments (<!-- without -->)
+    const openCount = (line.match(/<!--/g) ?? []).length;
+    const closeCount = (line.match(/-->/g) ?? []).length;
+    if (openCount > closeCount) {
+      issues.push({
+        line: i,
+        message: 'Unclosed HTML comment — missing "-->".',
+        severity: "error",
+      });
+    }
+  }
+
+  return issues;
 }

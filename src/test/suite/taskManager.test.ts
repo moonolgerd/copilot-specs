@@ -1,5 +1,10 @@
 import * as assert from "node:assert/strict";
-import { parseTasks, calculateProgress } from "../../taskManager.js";
+import {
+  parseTasks,
+  calculateProgress,
+  validateTaskMarkdown,
+  extractRequirementIdsFromText,
+} from "../../taskManager.js";
 
 suite("taskManager", () => {
   suite("parseTasks", () => {
@@ -138,6 +143,101 @@ suite("taskManager", () => {
       const p = calculateProgress(tasks);
       assert.equal(p.total, 2);
       assert.equal(p.completed, 0);
+    });
+  });
+
+  suite("extractRequirementIdsFromText (requirement inference)", () => {
+    test("extracts REQ-XX style IDs", () => {
+      const ids = extractRequirementIdsFromText("Implement REQ-01 and REQ-02");
+      assert.deepEqual(ids, ["REQ-01", "REQ-02"]);
+    });
+
+    test("extracts R-number style IDs", () => {
+      const ids = extractRequirementIdsFromText("See R1 and R2 for context");
+      assert.deepEqual(ids, ["R1", "R2"]);
+    });
+
+    test("deduplicates repeated IDs", () => {
+      const ids = extractRequirementIdsFromText(
+        "REQ-01 is referenced again as REQ-01",
+      );
+      assert.deepEqual(ids, ["REQ-01"]);
+    });
+
+    test("returns empty array when no IDs present", () => {
+      const ids = extractRequirementIdsFromText("No requirement ids here");
+      assert.deepEqual(ids, []);
+    });
+
+    test("inference is applied in parseTasks when no explicit requires comment", () => {
+      const { tasks } = parseTasks("- [ ] Implement REQ-03 logic", "mySpec");
+      assert.deepEqual(tasks[0].requirementIds, ["REQ-03"]);
+    });
+
+    test("explicit requires comment takes precedence over inference", () => {
+      const { tasks } = parseTasks(
+        "- [ ] <!-- task:T1 --> Implement REQ-03 logic <!-- requires:REQ-01 -->",
+        "mySpec",
+      );
+      // Only REQ-01 from the explicit comment, not REQ-03 inferred from title
+      assert.deepEqual(tasks[0].requirementIds, ["REQ-01"]);
+    });
+  });
+
+  suite("validateTaskMarkdown", () => {
+    test("returns no issues for valid content", () => {
+      const content =
+        "- [ ] <!-- task:T1 --> Do something <!-- requires:REQ-01 -->\n  - [ ] Sub task";
+      const issues = validateTaskMarkdown(content);
+      assert.equal(issues.length, 0);
+    });
+
+    test("detects invalid checkbox marker", () => {
+      const issues = validateTaskMarkdown("- [?] Some task");
+      assert.equal(issues.length, 1);
+      assert.equal(issues[0].severity, "error");
+      assert.match(issues[0].message, /Invalid checkbox marker/);
+    });
+
+    test("detects duplicate task IDs", () => {
+      const content =
+        "- [ ] <!-- task:T1 --> First\n- [ ] <!-- task:T1 --> Second";
+      const issues = validateTaskMarkdown(content);
+      const dupIssue = issues.find((i) =>
+        i.message.includes("Duplicate task ID"),
+      );
+      assert.ok(dupIssue, "expected a duplicate ID issue");
+      assert.equal(dupIssue.severity, "error");
+    });
+
+    test("detects malformed requires comment (space before colon)", () => {
+      const issues = validateTaskMarkdown(
+        "- [ ] Task <!-- requires : REQ-01 -->",
+      );
+      const issue = issues.find((i) =>
+        i.message.includes("Malformed requires"),
+      );
+      assert.ok(issue, "expected a malformed requires issue");
+      assert.equal(issue.severity, "warning");
+    });
+
+    test("detects unclosed HTML comment", () => {
+      const issues = validateTaskMarkdown("- [ ] Task <!-- unclosed");
+      const issue = issues.find((i) => i.message.includes("Unclosed HTML"));
+      assert.ok(issue, "expected an unclosed comment issue");
+      assert.equal(issue.severity, "error");
+    });
+
+    test("skips frontmatter when validating", () => {
+      const content = "---\nname: my-spec\n---\n- [ ] <!-- task:T1 --> Valid";
+      const issues = validateTaskMarkdown(content);
+      assert.equal(issues.length, 0);
+    });
+
+    test("reports correct 0-based line numbers", () => {
+      const content = "- [ ] <!-- task:T1 --> First\n- [?] Bad marker";
+      const issues = validateTaskMarkdown(content);
+      assert.equal(issues[0].line, 1);
     });
   });
 });

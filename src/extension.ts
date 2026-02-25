@@ -14,6 +14,7 @@ import {
   setTaskCompleted,
   markTaskAndSubtasksCompleted,
   calculateProgress,
+  validateTaskMarkdown,
 } from "./taskManager.js";
 import {
   SpecProvider,
@@ -239,6 +240,63 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.workspace.onDidSaveTextDocument((document) => {
       if (shouldScheduleAutoLink(document.uri)) {
         scheduleAutoLink();
+      }
+      validateSpecDocument(document);
+    }),
+  );
+
+  // ── Spec Markdown Diagnostics ────────────────────────────────────────────────
+
+  const specDiagnostics =
+    vscode.languages.createDiagnosticCollection("copilot-specs");
+  context.subscriptions.push(specDiagnostics);
+
+  function isSpecInstructionFile(uri: vscode.Uri): boolean {
+    return (
+      uri.fsPath.endsWith(".instructions.md") &&
+      uri.fsPath.includes(INSTRUCTIONS_SPECS_DIR.replace(/\//g, path.sep))
+    );
+  }
+
+  function validateSpecDocument(document: vscode.TextDocument): void {
+    if (!isSpecInstructionFile(document.uri)) {
+      return;
+    }
+    const issues = validateTaskMarkdown(document.getText());
+    const diagnostics = issues.map((issue) => {
+      const lineText = document.lineAt(issue.line).text;
+      const range = new vscode.Range(
+        issue.line,
+        0,
+        issue.line,
+        lineText.length,
+      );
+      return new vscode.Diagnostic(
+        range,
+        issue.message,
+        issue.severity === "error"
+          ? vscode.DiagnosticSeverity.Error
+          : vscode.DiagnosticSeverity.Warning,
+      );
+    });
+    specDiagnostics.set(document.uri, diagnostics);
+  }
+
+  // Validate already-open spec files at activation time
+  for (const document of vscode.workspace.textDocuments) {
+    validateSpecDocument(document);
+  }
+
+  context.subscriptions.push(
+    vscode.workspace.onDidOpenTextDocument((document) => {
+      validateSpecDocument(document);
+    }),
+    vscode.workspace.onDidChangeTextDocument((event) => {
+      validateSpecDocument(event.document);
+    }),
+    vscode.workspace.onDidCloseTextDocument((document) => {
+      if (isSpecInstructionFile(document.uri)) {
+        specDiagnostics.delete(document.uri);
       }
     }),
   );

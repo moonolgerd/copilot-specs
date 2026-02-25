@@ -48,10 +48,10 @@ applyTo: "src/**"
   - [ ] Validate parsed `FILE:` blocks before writing
   - [ ] Add rollback strategy for failed multi-file applies
 
-- [ ] **T8**: Improve diagnostics and docs coverage
-  - [ ] Add explicit validation feedback for malformed spec/task markdown
-  - [ ] Add user-facing docs for hook and MCP config formats
-  - [ ] Add tests for requirement inference and glob matching edge cases
+- [x] **T8**: Improve diagnostics and docs coverage
+  - [x] Add explicit validation feedback for malformed spec/task markdown
+  - [x] Add user-facing docs for hook and MCP config formats
+  - [x] Add tests for requirement inference and glob matching edge cases
 
 - [x] **T9**: Add "Start Task" inline action for incomplete tasks <!-- requires:REQ-07 -->
   - [x] Register a `copilot-specs.startTask` command that opens a focused Copilot chat with pre-filled spec name, task ID, and title

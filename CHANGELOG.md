@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project follows Semantic Versioning.
 
+## [0.1.4] - 2026-02-25
+
+### Added
+
+- **Spec markdown diagnostics** — spec instruction files (`.instructions.md` inside the specs directory) are now validated in real time. VS Code Problems are reported for invalid checkbox markers (e.g. `- [?]`), duplicate task IDs (`<!-- task:T1 -->` used more than once), malformed `requires` comments (space before the colon), and unclosed HTML comments. Diagnostics are cleared when the file is closed.
+- **`validateTaskMarkdown`** exported from `taskManager.ts` — validates spec/task markdown content and returns an array of `TaskValidationIssue` objects (`{ line, message, severity }`) for use in tests and tooling.
+- **`extractRequirementIdsFromText`** exported from `taskManager.ts` — exposes the internal requirement-ID inference logic for external callers and tests.
+- **`matchGlobPattern`** exported from `codeLensProvider.ts` — exposes the internal `minimatch` glob-matching implementation for testing and reuse.
+- **Hook JSON format docs** — `README.md` now documents the `.github/hooks/*.json` schema, all supported event names, and every field of the command entry object.
+- **MCP server config format docs** — `README.md` now documents the JSONC schema for `.vscode/mcp.json` / `.mcp.json` / `mcp.json`, including `stdio` and `sse` server types.
+- **New tests** — `taskManager.test.ts` adds suites for requirement inference edge cases (`extractRequirementIdsFromText`) and `validateTaskMarkdown`. New `codeLensProvider.test.ts` covers glob matching edge cases via `matchGlobPattern`.
+
 ## [0.1.3] - 2026-02-23
 
 ### Added
