@@ -250,9 +250,9 @@ export class SpecCodeLensProvider implements vscode.CodeLensProvider {
 
       return new vscode.CodeLens(range, {
         title: `Spec: ${primary.name} (${primary.completed}/${primary.total}, ${primary.pct}%)`,
-        command: "copilot-specs.openSpecPanel",
+        command: "copilot-specs.showRequirementTaskMap",
         arguments: [primary.name],
-        tooltip: `Open spec panel for "${primary.name}"`,
+        tooltip: `Show requirement/task mapping for "${primary.name}"`,
       });
     });
 
@@ -271,8 +271,8 @@ export class SpecCodeLensProvider implements vscode.CodeLensProvider {
       lenses.push(
         new vscode.CodeLens(anchorRanges[0], {
           title: `+${matched.length - 1} more matching spec(s)`,
-          command: "copilot-specs.openSpecPanel",
-          tooltip: "Open spec panel picker",
+          command: "copilot-specs.showRequirementTaskMap",
+          tooltip: "Select a spec to view requirement/task mapping",
         }),
       );
     }

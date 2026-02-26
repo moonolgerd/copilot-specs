@@ -60,7 +60,9 @@ export async function listHooks(): Promise<Hook[]> {
         if (!Array.isArray(commands)) {
           continue;
         }
-        for (const cmd of commands as HookCommand[]) {
+        for (const [commandIndex, cmd] of (
+          commands as HookCommand[]
+        ).entries()) {
           const shortCmd =
             cmd.command?.length > 40
               ? cmd.command.substring(0, 37) + "..."
@@ -69,6 +71,8 @@ export async function listHooks(): Promise<Hook[]> {
             name: `${event}: ${shortCmd}`,
             filePath: uri.fsPath,
             event: event as HookEventName,
+            enabled: cmd.enabled !== false,
+            commandIndex,
             commandEntry: cmd,
           });
         }
@@ -184,6 +188,34 @@ export async function runHook(hook: Hook): Promise<void> {
     "vscode.open",
     vscode.Uri.file(hook.filePath),
   );
+}
+
+export async function setHookEnabled(
+  filePath: string,
+  event: HookEventName,
+  commandIndex: number,
+  enabled: boolean,
+): Promise<boolean> {
+  try {
+    const uri = vscode.Uri.file(filePath);
+    const content = await readTextFile(uri);
+    const config = JSON.parse(content) as HooksFileConfig;
+    const commands = config.hooks?.[event];
+    if (
+      !Array.isArray(commands) ||
+      commandIndex < 0 ||
+      commandIndex >= commands.length
+    ) {
+      return false;
+    }
+
+    const command = commands[commandIndex] as HookCommand;
+    command.enabled = enabled;
+    await writeTextFile(uri, JSON.stringify(config, null, 2) + "\n");
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**

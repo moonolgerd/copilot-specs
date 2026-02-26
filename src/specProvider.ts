@@ -12,13 +12,21 @@ export class SpecItem extends vscode.TreeItem {
   ) {
     super(spec.name, vscode.TreeItemCollapsibleState.Collapsed);
     this.contextValue = "spec";
-    this.iconPath = new vscode.ThemeIcon(
+    this.iconPath =
       progress.total === 0
-        ? "file-text"
+        ? new vscode.ThemeIcon(
+            "file-text",
+            new vscode.ThemeColor("descriptionForeground"),
+          )
         : progress.completed === progress.total
-          ? "pass-filled"
-          : "circle-large-outline",
-    );
+          ? new vscode.ThemeIcon(
+              "pass-filled",
+              new vscode.ThemeColor("charts.green"),
+            )
+          : new vscode.ThemeIcon(
+              "circle-large-outline",
+              new vscode.ThemeColor("charts.orange"),
+            );
     const pct =
       progress.total > 0
         ? Math.round((progress.completed / progress.total) * 100)
@@ -48,7 +56,15 @@ export class SpecFileItem extends vscode.TreeItem {
     };
     super(labels[fileType], vscode.TreeItemCollapsibleState.None);
     this.contextValue = `specFile-${fileType}`;
-    this.iconPath = new vscode.ThemeIcon(icons[fileType]);
+    const iconColors: Record<"requirements" | "design" | "tasks", string> = {
+      requirements: "charts.blue",
+      design: "charts.orange",
+      tasks: "charts.green",
+    };
+    this.iconPath = new vscode.ThemeIcon(
+      icons[fileType],
+      new vscode.ThemeColor(iconColors[fileType]),
+    );
     this.resourceUri = vscode.Uri.file(filePath);
     this.command = {
       command: "vscode.open",
@@ -62,9 +78,15 @@ export class TaskItem extends vscode.TreeItem {
   constructor(public readonly task: Task) {
     super(task.title, vscode.TreeItemCollapsibleState.None);
     this.contextValue = task.completed ? "task-complete" : "task-incomplete";
-    this.iconPath = new vscode.ThemeIcon(
-      task.completed ? "pass-filled" : "circle-large-outline",
-    );
+    this.iconPath = task.completed
+      ? new vscode.ThemeIcon(
+          "pass-filled",
+          new vscode.ThemeColor("charts.green"),
+        )
+      : new vscode.ThemeIcon(
+          "circle-large-outline",
+          new vscode.ThemeColor("charts.orange"),
+        );
     this.description = task.id;
     this.tooltip = `[${task.specName}] ${task.id}: ${task.title}`;
     this.command = {
@@ -128,7 +150,10 @@ export class SteeringItem extends vscode.TreeItem {
   ) {
     super(name, vscode.TreeItemCollapsibleState.None);
     this.contextValue = "steeringEntry";
-    this.iconPath = new vscode.ThemeIcon("symbol-namespace");
+    this.iconPath = new vscode.ThemeIcon(
+      "symbol-namespace",
+      new vscode.ThemeColor("charts.blue"),
+    );
     this.resourceUri = vscode.Uri.file(filePath);
     this.command = {
       command: "vscode.open",
@@ -145,7 +170,10 @@ export class SkillItem extends vscode.TreeItem {
   ) {
     super(skillName, vscode.TreeItemCollapsibleState.None);
     this.contextValue = "skill";
-    this.iconPath = new vscode.ThemeIcon("sparkle");
+    this.iconPath = new vscode.ThemeIcon(
+      "sparkle",
+      new vscode.ThemeColor("charts.purple"),
+    );
     this.resourceUri = vscode.Uri.file(filePath);
     this.command = {
       command: "vscode.open",
@@ -162,7 +190,10 @@ export class PromptItem extends vscode.TreeItem {
   ) {
     super(promptName, vscode.TreeItemCollapsibleState.None);
     this.contextValue = "prompt";
-    this.iconPath = new vscode.ThemeIcon("comment-discussion");
+    this.iconPath = new vscode.ThemeIcon(
+      "comment-discussion",
+      new vscode.ThemeColor("charts.yellow"),
+    );
     this.resourceUri = vscode.Uri.file(filePath);
     this.command = {
       command: "vscode.open",
@@ -179,7 +210,10 @@ export class RulesFileItem extends vscode.TreeItem {
   ) {
     super(name, vscode.TreeItemCollapsibleState.None);
     this.contextValue = "rulesFile";
-    this.iconPath = new vscode.ThemeIcon("symbol-ruler");
+    this.iconPath = new vscode.ThemeIcon(
+      "symbol-ruler",
+      new vscode.ThemeColor("charts.orange"),
+    );
     this.resourceUri = vscode.Uri.file(filePath);
     this.command = {
       command: "vscode.open",
@@ -203,7 +237,16 @@ export class SectionItem extends vscode.TreeItem {
         : vscode.TreeItemCollapsibleState.None,
     );
     this.contextValue = `section-${kind}`;
-    this.iconPath = new vscode.ThemeIcon(icon);
+    const sectionColors: Record<typeof kind, string> = {
+      instructions: "charts.blue",
+      rules: "charts.orange",
+      skills: "charts.purple",
+      prompts: "charts.yellow",
+    };
+    this.iconPath = new vscode.ThemeIcon(
+      icon,
+      new vscode.ThemeColor(sectionColors[kind]),
+    );
     this.description = childCount > 0 ? `${childCount}` : "";
   }
 }
@@ -294,11 +337,18 @@ export class HookItem extends vscode.TreeItem {
   constructor(
     public readonly hookName: string,
     public readonly filePath: string,
+    public readonly event: string,
+    public readonly commandIndex: number,
     public readonly enabled: boolean,
   ) {
     super(hookName, vscode.TreeItemCollapsibleState.None);
-    this.contextValue = "hook";
-    this.iconPath = new vscode.ThemeIcon(enabled ? "zap" : "zap-disabled");
+    this.contextValue = enabled ? "hook-enabled" : "hook-disabled";
+    this.iconPath = enabled
+      ? new vscode.ThemeIcon("zap", new vscode.ThemeColor("charts.green"))
+      : new vscode.ThemeIcon(
+          "zap-disabled",
+          new vscode.ThemeColor("descriptionForeground"),
+        );
     this.description = enabled ? "enabled" : "disabled";
     this.resourceUri = vscode.Uri.file(filePath);
     this.command = {
@@ -317,7 +367,13 @@ export class HooksProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
 
   constructor(
     private readonly getHooks: () => Promise<
-      { name: string; filePath: string; enabled: boolean }[]
+      {
+        name: string;
+        filePath: string;
+        event: string;
+        commandIndex: number;
+        enabled: boolean;
+      }[]
     >,
   ) {}
 
@@ -341,7 +397,10 @@ export class HooksProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
         empty.iconPath = new vscode.ThemeIcon("info");
         return [empty];
       }
-      return hooks.map((h) => new HookItem(h.name, h.filePath, h.enabled));
+      return hooks.map(
+        (h) =>
+          new HookItem(h.name, h.filePath, h.event, h.commandIndex, h.enabled),
+      );
     } catch {
       return [];
     }
@@ -364,8 +423,18 @@ export class MCPSourceItem extends vscode.TreeItem {
     this.contextValue = "mcpSource";
     this.iconPath = new vscode.ThemeIcon(
       source === "workspace" ? "folder-library" : "account",
+      new vscode.ThemeColor(
+        source === "workspace" ? "charts.blue" : "charts.purple",
+      ),
     );
     this.description = servers.length > 0 ? `${servers.length}` : "none";
+    if (source === "workspace") {
+      this.command = {
+        command: "copilot-specs.openWorkspaceMcpConfig",
+        title: "Open Workspace MCP Config",
+      };
+      this.tooltip = "Open or create .github/mcp.json";
+    }
   }
 }
 
@@ -378,7 +447,12 @@ export class MCPServerItem extends vscode.TreeItem {
   ) {
     super(name, vscode.TreeItemCollapsibleState.None);
     this.contextValue = enabled ? "mcpServer-enabled" : "mcpServer-disabled";
-    this.iconPath = new vscode.ThemeIcon(enabled ? "plug" : "debug-disconnect");
+    this.iconPath = enabled
+      ? new vscode.ThemeIcon("plug", new vscode.ThemeColor("charts.green"))
+      : new vscode.ThemeIcon(
+          "debug-disconnect",
+          new vscode.ThemeColor("descriptionForeground"),
+        );
     this.description = enabled ? "enabled" : "disabled";
     this.tooltip = `${source} • ${filePath}`;
     this.resourceUri = vscode.Uri.file(filePath);

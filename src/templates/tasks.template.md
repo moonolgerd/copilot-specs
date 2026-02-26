@@ -1,5 +1,5 @@
 ---
-name: { { SPEC_NAME } }
+name: "{{SPEC_NAME}}"
 applyTo: "{{FILE_GLOB}}"
 ---
 

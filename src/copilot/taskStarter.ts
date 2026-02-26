@@ -3,10 +3,12 @@ import {
   readTextFile,
   requirementsUri,
   designUri,
+  tasksUri,
   linksUri,
   fileExists,
 } from "../utils/fileSystem.js";
 import { loadTasks } from "../taskManager.js";
+import { loadSpec } from "../specManager.js";
 
 type SpecLinks = Record<string, string[]>;
 
@@ -182,6 +184,70 @@ export async function buildStartTaskPrompt(
     `2. **Implement** the required changes following existing project conventions and patterns.`,
     `3. **Verify** your changes compile and pass any existing tests.`,
     `4. Focus only on what this specific task requires — do not refactor unrelated code.`,
+  );
+
+  return parts.join("\n");
+}
+
+export async function buildRunAllTasksVerificationPrompt(
+  specName: string,
+): Promise<string> {
+  const spec = await loadSpec(specName);
+  const { tasks } = await loadTasks(specName);
+
+  const pending = tasks.filter((t) => !t.completed);
+  const completed = tasks.filter((t) => t.completed);
+
+  const reqFileUri = requirementsUri(specName);
+  const designFileUri = designUri(specName);
+  const tasksFileUri = tasksUri(specName);
+
+  const parts: string[] = [];
+  parts.push(
+    `You are verifying implementation progress for the **${specName}** spec.`,
+    "",
+    `## Verification Goal`,
+    `Validate every task and sub-task against the current codebase, then update task status to match reality.`,
+    "",
+    `## Spec Context`,
+    `- Spec name: ${specName}`,
+    `- File scope: ${spec?.fileGlob ?? "**/*"}`,
+    `- Requirements file: ${reqFileUri?.fsPath ?? "(not found)"}`,
+    `- Design file: ${designFileUri?.fsPath ?? "(not found)"}`,
+    `- Tasks file: ${tasksFileUri?.fsPath ?? "(not found)"}`,
+    "",
+    `## Task Summary`,
+    `- Total: ${tasks.length}`,
+    `- Completed currently: ${completed.length}`,
+    `- Pending currently: ${pending.length}`,
+  );
+
+  if (tasks.length > 0) {
+    parts.push("", "### Tasks");
+    for (const task of tasks) {
+      const check = task.completed ? "[x]" : "[ ]";
+      const requirements =
+        task.requirementIds && task.requirementIds.length > 0
+          ? ` (requires: ${task.requirementIds.join(", ")})`
+          : "";
+      parts.push(`- ${check} ${task.id}: ${task.title}${requirements}`);
+      for (const sub of task.subTasks) {
+        parts.push(`  - ${sub.completed ? "[x]" : "[ ]"} ${sub.title}`);
+      }
+    }
+  }
+
+  parts.push(
+    "",
+    "---",
+    "## Instructions",
+    "1. Read requirements, design, tasks docs, and relevant implementation files in scope.",
+    "2. Verify each task/sub-task with concrete code evidence.",
+    "3. Run appropriate build/tests for verification.",
+    "4. Update `implementation-tasks.instructions.md` checkboxes so task state reflects actual completion.",
+    "5. Return a concise verification report with: completed, still-pending, and any blockers.",
+    "",
+    "Do not perform unrelated refactors.",
   );
 
   return parts.join("\n");

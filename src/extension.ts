@@ -20,6 +20,7 @@ import {
   SpecProvider,
   SteeringProvider,
   HooksProvider,
+  HookItem,
   MCPServersProvider,
   MCPServerItem,
   TaskItem,
@@ -35,7 +36,6 @@ import {
   showRequirementTaskMap,
   openTaskReferencedFiles,
 } from "./codeLensProvider.js";
-import { SpecPanel } from "./webview/specPanel.js";
 import {
   readAllSteering,
   promptNewSteering,
@@ -45,16 +45,21 @@ import {
   listHooks,
   createHook,
   runHook,
+  setHookEnabled,
   registerHookWatchers,
   initHooks,
 } from "./hooksManager.js";
 import { registerChatParticipant } from "./copilot/chatParticipant.js";
-import { buildStartTaskPrompt } from "./copilot/taskStarter.js";
+import {
+  buildStartTaskPrompt,
+  buildRunAllTasksVerificationPrompt,
+} from "./copilot/taskStarter.js";
 import { runAutopilot } from "./autopilot.js";
 import {
   listMcpConfigTargets,
   listMcpServers,
   setMcpServerEnabled,
+  getPreferredWorkspaceMcpConfigPath,
 } from "./mcpManager.js";
 import {
   INSTRUCTIONS_SPECS_DIR,
@@ -69,6 +74,7 @@ import {
   ensureGitignoreEntry,
 } from "./utils/fileSystem.js";
 import { Task } from "./models/index.js";
+import { HookEventName } from "./models/index.js";
 
 export function activate(context: vscode.ExtensionContext): void {
   const extensionPath = context.extensionPath;
@@ -113,7 +119,9 @@ export function activate(context: vscode.ExtensionContext): void {
     return hooks.map((h) => ({
       name: h.name,
       filePath: h.filePath,
-      enabled: true, // native hooks are always active
+      event: h.event,
+      commandIndex: h.commandIndex,
+      enabled: h.enabled,
     }));
   });
   const mcpServersProvider = new MCPServersProvider(async () =>
@@ -233,6 +241,7 @@ export function activate(context: vscode.ExtensionContext): void {
   });
   makeWatcher(`${HOOKS_DIR}/**`, () => hooksProvider.refresh());
   makeWatcher(".vscode/mcp.json", () => mcpServersProvider.refresh());
+  makeWatcher(".github/mcp.json", () => mcpServersProvider.refresh());
   makeWatcher(".mcp.json", () => mcpServersProvider.refresh());
   makeWatcher("mcp.json", () => mcpServersProvider.refresh());
   makeWatcher(".github/copilot-instructions.md", () =>
@@ -405,35 +414,6 @@ export function activate(context: vscode.ExtensionContext): void {
     ],
 
     [
-      "copilot-specs.openSpecPanel",
-      async (specNameOrItem?: unknown) => {
-        const name =
-          typeof specNameOrItem === "string"
-            ? specNameOrItem
-            : resolveSpecName(specNameOrItem);
-        if (!name) {
-          // Pick from list
-          const specs = await listSpecs();
-          if (specs.length === 0) {
-            vscode.window.showInformationMessage(
-              "No specs found. Create one first.",
-            );
-            return;
-          }
-          const pick = await vscode.window.showQuickPick(
-            specs.map((s) => s.name),
-          );
-          if (!pick) {
-            return;
-          }
-          await SpecPanel.show(context.extensionUri, pick);
-          return;
-        }
-        await SpecPanel.show(context.extensionUri, name);
-      },
-    ],
-
-    [
       "copilot-specs.generateWithCopilot",
       async (specNameOrItem?: unknown) => {
         const name =
@@ -598,6 +578,14 @@ export function activate(context: vscode.ExtensionContext): void {
     ],
 
     [
+      "copilot-specs.newPrompt",
+      async () => {
+        await promptNewSteering("prompt");
+        steeringProvider.refresh();
+      },
+    ],
+
+    [
       "copilot-specs.editSteering",
       async () => {
         await openSteeringFile();
@@ -643,6 +631,75 @@ export function activate(context: vscode.ExtensionContext): void {
           if (pick) {
             await runHook(pick.hook);
           }
+        }
+      },
+    ],
+
+    [
+      "copilot-specs.toggleHook",
+      async (hookItem?: unknown) => {
+        const hook = resolveHook(hookItem);
+        if (!hook) {
+          return;
+        }
+
+        const nextEnabled = !hook.enabled;
+        const changed = await setHookEnabled(
+          hook.filePath,
+          hook.event,
+          hook.commandIndex,
+          nextEnabled,
+        );
+
+        if (!changed) {
+          vscode.window.showWarningMessage(
+            `Hook was not found at index ${hook.commandIndex} in ${hook.filePath}.`,
+          );
+          return;
+        }
+
+        hooksProvider.refresh();
+      },
+    ],
+
+    [
+      "copilot-specs.enableHook",
+      async (hookItem?: unknown) => {
+        const hook = resolveHook(hookItem);
+        if (!hook || hook.enabled) {
+          return;
+        }
+
+        const changed = await setHookEnabled(
+          hook.filePath,
+          hook.event,
+          hook.commandIndex,
+          true,
+        );
+
+        if (changed) {
+          hooksProvider.refresh();
+        }
+      },
+    ],
+
+    [
+      "copilot-specs.disableHook",
+      async (hookItem?: unknown) => {
+        const hook = resolveHook(hookItem);
+        if (!hook || !hook.enabled) {
+          return;
+        }
+
+        const changed = await setHookEnabled(
+          hook.filePath,
+          hook.event,
+          hook.commandIndex,
+          false,
+        );
+
+        if (changed) {
+          hooksProvider.refresh();
         }
       },
     ],
@@ -701,6 +758,41 @@ export function activate(context: vscode.ExtensionContext): void {
     ],
 
     [
+      "copilot-specs.runAllTasks",
+      async (specNameOrItem?: unknown) => {
+        let name =
+          typeof specNameOrItem === "string"
+            ? specNameOrItem
+            : resolveSpecName(specNameOrItem);
+
+        if (!name) {
+          const specs = await listSpecs();
+          if (specs.length === 0) {
+            vscode.window.showInformationMessage(
+              "No specs found. Create a spec first.",
+            );
+            return;
+          }
+
+          const pick = await vscode.window.showQuickPick(
+            specs.map((s) => ({ label: s.name, description: s.fileGlob })),
+            { placeHolder: "Select a spec to verify all tasks" },
+          );
+          if (!pick) {
+            return;
+          }
+          name = pick.label;
+        }
+
+        const prompt = await buildRunAllTasksVerificationPrompt(name);
+        await vscode.commands.executeCommand("workbench.action.chat.open", {
+          query: prompt,
+          mode: "agent",
+        });
+      },
+    ],
+
+    [
       "copilot-specs.autopilot",
       async (specNameOrItem?: unknown) => {
         const name =
@@ -723,6 +815,36 @@ export function activate(context: vscode.ExtensionContext): void {
         }
         await runAutopilot();
         refreshAll();
+      },
+    ],
+
+    [
+      "copilot-specs.openWorkspaceMcpConfig",
+      async () => {
+        const workspaceMcpPath = getPreferredWorkspaceMcpConfigPath();
+        if (!workspaceMcpPath) {
+          vscode.window.showWarningMessage("No workspace folder open.");
+          return;
+        }
+
+        const uri = vscode.Uri.file(workspaceMcpPath);
+        let exists = true;
+        try {
+          await vscode.workspace.fs.stat(uri);
+        } catch {
+          exists = false;
+        }
+
+        if (!exists) {
+          await vscode.workspace.fs.createDirectory(
+            vscode.Uri.file(path.dirname(uri.fsPath)),
+          );
+          const initial = Buffer.from('{\n  "servers": {}\n}\n', "utf8");
+          await vscode.workspace.fs.writeFile(uri, initial);
+          mcpServersProvider.refresh();
+        }
+
+        await vscode.commands.executeCommand("vscode.open", uri);
       },
     ],
 
@@ -763,7 +885,7 @@ export function activate(context: vscode.ExtensionContext): void {
           await vscode.workspace.fs.createDirectory(
             vscode.Uri.file(path.dirname(uri.fsPath)),
           );
-          const initial = Buffer.from('{\n  "mcpServers": {}\n}\n', "utf8");
+          const initial = Buffer.from('{\n  "servers": {}\n}\n', "utf8");
           await vscode.workspace.fs.writeFile(uri, initial);
           mcpServersProvider.refresh();
         }
@@ -811,6 +933,56 @@ export function activate(context: vscode.ExtensionContext): void {
         } catch (err) {
           vscode.window.showErrorMessage(
             `Failed to update MCP server "${server.name}": ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+      },
+    ],
+
+    [
+      "copilot-specs.enableMcpServer",
+      async (mcpItem?: unknown) => {
+        const server = resolveMcpServer(mcpItem);
+        if (!server || server.enabled) {
+          return;
+        }
+
+        try {
+          const changed = await setMcpServerEnabled(
+            server.filePath,
+            server.name,
+            true,
+          );
+          if (changed) {
+            mcpServersProvider.refresh();
+          }
+        } catch (err) {
+          vscode.window.showErrorMessage(
+            `Failed to enable MCP server "${server.name}": ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+      },
+    ],
+
+    [
+      "copilot-specs.disableMcpServer",
+      async (mcpItem?: unknown) => {
+        const server = resolveMcpServer(mcpItem);
+        if (!server || !server.enabled) {
+          return;
+        }
+
+        try {
+          const changed = await setMcpServerEnabled(
+            server.filePath,
+            server.name,
+            false,
+          );
+          if (changed) {
+            mcpServersProvider.refresh();
+          }
+        } catch (err) {
+          vscode.window.showErrorMessage(
+            `Failed to disable MCP server "${server.name}": ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       },
@@ -918,6 +1090,49 @@ function resolveMcpServer(
       name: (item as MCPServerItem).name,
       enabled: (item as MCPServerItem).enabled,
       filePath: (item as MCPServerItem).filePath,
+    };
+  }
+
+  return undefined;
+}
+
+function resolveHook(item: unknown):
+  | {
+      filePath: string;
+      event: HookEventName;
+      commandIndex: number;
+      enabled: boolean;
+    }
+  | undefined {
+  if (!item) {
+    return undefined;
+  }
+
+  if (
+    typeof (item as { filePath?: unknown }).filePath === "string" &&
+    typeof (item as { event?: unknown }).event === "string" &&
+    typeof (item as { commandIndex?: unknown }).commandIndex === "number" &&
+    typeof (item as { enabled?: unknown }).enabled === "boolean"
+  ) {
+    return {
+      filePath: (item as { filePath: string }).filePath,
+      event: (item as { event: HookEventName }).event,
+      commandIndex: (item as { commandIndex: number }).commandIndex,
+      enabled: (item as { enabled: boolean }).enabled,
+    };
+  }
+
+  if (
+    typeof (item as HookItem).filePath === "string" &&
+    typeof (item as HookItem).event === "string" &&
+    typeof (item as HookItem).commandIndex === "number" &&
+    typeof (item as HookItem).enabled === "boolean"
+  ) {
+    return {
+      filePath: (item as HookItem).filePath,
+      event: (item as HookItem).event as HookEventName,
+      commandIndex: (item as HookItem).commandIndex,
+      enabled: (item as HookItem).enabled,
     };
   }
 

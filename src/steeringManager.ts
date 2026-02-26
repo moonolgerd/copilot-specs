@@ -6,10 +6,12 @@ import {
   ensureDir,
   copilotInstructionsUri,
   resolveWorkspacePath,
+  PROMPTS_DIR,
 } from "./utils/fileSystem.js";
 
 const STEERING_START = "<!-- copilot-specs:steering:start -->";
 const STEERING_END = "<!-- copilot-specs:steering:end -->";
+type NewSteeringKind = "rules" | "skill" | "prompt";
 
 export interface SteeringData {
   name: string;
@@ -94,22 +96,31 @@ export async function readSteeringForContext(): Promise<string> {
   return readTextFile(uri);
 }
 
-export async function promptNewSteering(): Promise<void> {
-  const kind = await vscode.window.showQuickPick(
-    [
-      {
-        label: "$(symbol-ruler) Rules file",
-        description: "New .instructions.md file in .github/instructions/",
-        value: "rules" as const,
-      },
-      {
-        label: "$(sparkle) Skill",
-        description: "New SKILL.md entry in .github/skills/",
-        value: "skill" as const,
-      },
-    ],
-    { placeHolder: "What do you want to add?" },
-  );
+export async function promptNewSteering(
+  defaultKind?: NewSteeringKind,
+): Promise<void> {
+  const kind = defaultKind
+    ? { value: defaultKind }
+    : await vscode.window.showQuickPick(
+        [
+          {
+            label: "$(symbol-ruler) Rules file",
+            description: "New .instructions.md file in .github/instructions/",
+            value: "rules" as const,
+          },
+          {
+            label: "$(sparkle) Skill",
+            description: "New SKILL.md entry in .github/skills/",
+            value: "skill" as const,
+          },
+          {
+            label: "$(comment-discussion) Prompt",
+            description: "New .prompt.md file in .github/prompts/",
+            value: "prompt" as const,
+          },
+        ],
+        { placeHolder: "What do you want to add?" },
+      );
   if (!kind) {
     return;
   }
@@ -118,11 +129,15 @@ export async function promptNewSteering(): Promise<void> {
     prompt:
       kind.value === "rules"
         ? "Rules file name (without extension)"
-        : "Skill name",
+        : kind.value === "skill"
+          ? "Skill name"
+          : "Prompt name (without extension)",
     placeHolder:
       kind.value === "rules"
         ? 'e.g., "testing", "deployment"'
-        : 'e.g., "test-runner", "linter"',
+        : kind.value === "skill"
+          ? 'e.g., "test-runner", "linter"'
+          : 'e.g., "review-pr", "summarize-diff"',
   });
   if (!name?.trim()) {
     return;
@@ -157,7 +172,7 @@ export async function promptNewSteering(): Promise<void> {
       );
     }
     await vscode.commands.executeCommand("vscode.open", uri);
-  } else {
+  } else if (kind.value === "skill") {
     const dir = resolveWorkspacePath(`.github/skills/${slug}`);
     if (dir) {
       await ensureDir(dir);
@@ -171,7 +186,27 @@ export async function promptNewSteering(): Promise<void> {
     } else {
       await writeTextFile(
         uri,
-        `# ${name.trim()}\n\n> Describe what this skill does and when Copilot should use it.\n`,
+        `---\nname: ${slug}\ndescription: Describe what this skill does and when Copilot should use it.\n---\n`,
+      );
+    }
+    await vscode.commands.executeCommand("vscode.open", uri);
+  } else {
+    const dir = resolveWorkspacePath(PROMPTS_DIR);
+    if (dir) {
+      await ensureDir(dir);
+    }
+    const uri = resolveWorkspacePath(`${PROMPTS_DIR}/${slug}.prompt.md`);
+    if (!uri) {
+      return;
+    }
+    if (await fileExists(uri)) {
+      vscode.window.showWarningMessage(
+        `Prompt "${slug}.prompt.md" already exists.`,
+      );
+    } else {
+      await writeTextFile(
+        uri,
+        `---\nagent: "agent"\n---\n\n# ${name.trim()}\n\n> Describe when and how this prompt should be used.\n`,
       );
     }
     await vscode.commands.executeCommand("vscode.open", uri);

@@ -18,6 +18,14 @@ export interface MCPConfigTarget {
   exists: boolean;
 }
 
+export function getPreferredWorkspaceMcpConfigPath(): string | undefined {
+  const workspaceRoot = getWorkspaceRoot();
+  if (!workspaceRoot) {
+    return undefined;
+  }
+  return path.join(workspaceRoot, ".github", "mcp.json");
+}
+
 export async function listMcpServers(): Promise<MCPServerEntry[]> {
   const { workspaceFiles, userFiles } = getMcpConfigPaths();
 
@@ -131,6 +139,7 @@ function getMcpConfigPaths(): {
   const workspaceRoot = getWorkspaceRoot();
   const workspaceFiles = workspaceRoot
     ? [
+        path.join(workspaceRoot, ".github", "mcp.json"),
         path.join(workspaceRoot, ".vscode", "mcp.json"),
         path.join(workspaceRoot, ".mcp.json"),
         path.join(workspaceRoot, "mcp.json"),
@@ -154,6 +163,9 @@ function getMcpConfigPaths(): {
 }
 
 function workspaceLabel(filePath: string): string {
+  if (filePath.endsWith(path.join(".github", "mcp.json"))) {
+    return "Workspace (.github/mcp.json)";
+  }
   if (filePath.endsWith(path.join(".vscode", "mcp.json"))) {
     return "Workspace (.vscode/mcp.json)";
   }
@@ -211,8 +223,8 @@ function ensureServerMap(
     return existingMcpServers;
   }
 
-  root.mcpServers = {};
-  return root.mcpServers as Record<string, unknown>;
+  root.servers = {};
+  return root.servers as Record<string, unknown>;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {

@@ -52,6 +52,7 @@ export const HOOK_EVENT_NAMES: HookEventName[] = [
 export interface HookCommand {
   type: "command";
   command: string;
+  enabled?: boolean;
   windows?: string;
   linux?: string;
   osx?: string;
@@ -68,6 +69,8 @@ export interface Hook {
   name: string; // display label: "{event}: {short command}"
   filePath: string; // path to the .json file
   event: HookEventName;
+  enabled: boolean;
+  commandIndex: number;
   commandEntry: HookCommand;
 }
 

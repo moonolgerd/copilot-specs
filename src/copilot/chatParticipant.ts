@@ -192,11 +192,14 @@ export function registerChatParticipant(
             }
             await writeTextFile(uri, fileContent);
             stream.markdown(`\n\n✅ ${parsed.section} file updated.\n`);
-            stream.button({
-              command: "copilot-specs.openSpecPanel",
-              arguments: [parsed.specName],
-              title: "Open Spec Panel",
-            });
+            const reqOpenUri = requirementsUri(parsed.specName);
+            if (reqOpenUri) {
+              stream.button({
+                command: "vscode.open",
+                arguments: [reqOpenUri],
+                title: "Open Requirements",
+              });
+            }
           }
         }
 

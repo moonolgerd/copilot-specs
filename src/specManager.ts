@@ -192,16 +192,5 @@ export async function promptCreateSpec(): Promise<Spec | undefined> {
 
   const spec = await createSpec(name.trim(), fileGlob.trim() || "**/*");
 
-  const autoOpen = vscode.workspace
-    .getConfiguration("copilot-specs")
-    .get<boolean>("autoOpenPanel", true);
-
-  if (autoOpen) {
-    await vscode.commands.executeCommand(
-      "copilot-specs.openSpecPanel",
-      spec.name,
-    );
-  }
-
   return spec;
 }

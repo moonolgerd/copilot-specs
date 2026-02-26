@@ -185,9 +185,12 @@ export async function generateFullSpec(
   stream.markdown(
     `\n\n---\n✅ Spec files created in \`.github/instructions/specs/${specName}/\` and \`.github/specs/${specName}/\`\n`,
   );
-  stream.button({
-    command: "copilot-specs.openSpecPanel",
-    arguments: [specName],
-    title: "Open Spec Panel",
-  });
+  const reqOpenUri = requirementsUri(specName);
+  if (reqOpenUri) {
+    stream.button({
+      command: "vscode.open",
+      arguments: [reqOpenUri],
+      title: "Open Requirements",
+    });
+  }
 }

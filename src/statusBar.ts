@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
 export class SpecStatusBar {
   private readonly item: vscode.StatusBarItem;
@@ -6,10 +6,9 @@ export class SpecStatusBar {
   constructor() {
     this.item = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left,
-      100
+      100,
     );
-    this.item.command = 'copilot-specs.openSpecPanel';
-    this.item.tooltip = 'Open Copilot Spec Panel';
+    this.item.tooltip = "Copilot Specs progress";
   }
 
   update(specName: string | undefined, completed: number, total: number): void {
