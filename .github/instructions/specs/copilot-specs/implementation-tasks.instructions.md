@@ -43,10 +43,10 @@ applyTo: "src/**"
 
 ## Remaining Enhancements
 
-- [ ] **T7**: Strengthen autopilot edit safety
-  - [ ] Add file content diff preview before apply
-  - [ ] Validate parsed `FILE:` blocks before writing
-  - [ ] Add rollback strategy for failed multi-file applies
+- [x] **T7**: Strengthen autopilot edit safety
+  - [x] Add file content diff preview before apply
+  - [x] Validate parsed `FILE:` blocks before writing
+  - [x] Add rollback strategy for failed multi-file applies
 
 - [x] **T8**: Improve diagnostics and docs coverage
   - [x] Add explicit validation feedback for malformed spec/task markdown

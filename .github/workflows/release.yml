@@ -1,100 +1,112 @@
 name: Release
 
 on:
-        workflow_dispatch:
-                inputs:
-                        publish_target:
-                                description: "Where to publish"
-                                required: true
-                                default: marketplace
-                                type: choice
-                                options:
-                                        - dry-run
-                                        - marketplace
-        push:
-                tags:
-                        - "v*"
+  workflow_dispatch:
+    inputs:
+      publish_target:
+        description: "Where to publish"
+        required: true
+        default: marketplace
+        type: choice
+        options:
+          - dry-run
+          - marketplace
+  push:
+    tags:
+      - "v*"
 
 jobs:
-        package:
-                name: Package VSIX
-                runs-on: ubuntu-latest
+  package:
+    name: Package VSIX
+    runs-on: ubuntu-latest
 
-                outputs:
-                        vsix_name: ${{ steps.meta.outputs.vsix_name }}
+    outputs:
+      vsix_name: ${{ steps.meta.outputs.vsix_name }}
 
-                steps:
-                        - name: Checkout
-                          uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-                        - name: Setup Node.js
-                          uses: actions/setup-node@v4
-                          with:
-                                  node-version: 22
-                                  cache: npm
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
 
-                        - name: Install dependencies
-                          run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-                        - name: Compile TypeScript
-                          run: npm run compile
+      - name: Compile TypeScript
+        run: npm run compile
 
-                        - name: Bundle extension
-                          run: npm run bundle
+      - name: Bundle extension
+        run: npm run bundle
 
-                        - name: Determine package name
-                          id: meta
-                          shell: bash
-                          run: |
-                                  VERSION=$(node -p "require('./package.json').version")
-                                  VSIX_NAME="copilot-specs-${VERSION}.vsix"
-                                  echo "vsix_name=$VSIX_NAME" >> "$GITHUB_OUTPUT"
+      - name: Determine package name
+        id: meta
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          VSIX_NAME="copilot-specs-${VERSION}.vsix"
+          echo "vsix_name=$VSIX_NAME" >> "$GITHUB_OUTPUT"
 
-                        - name: Build VSIX
-                          run: npx @vscode/vsce package --out "${{ steps.meta.outputs.vsix_name }}"
+      - name: Build VSIX
+        run: npx @vscode/vsce package --out "${{ steps.meta.outputs.vsix_name }}"
 
-                        - name: Upload VSIX artifact
-                          uses: actions/upload-artifact@v4
-                          with:
-                                  name: ${{ steps.meta.outputs.vsix_name }}
-                                  path: ${{ steps.meta.outputs.vsix_name }}
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.vsix_name }}
+          path: ${{ steps.meta.outputs.vsix_name }}
 
-        publish:
-                name: Publish Extension
-                needs: package
-                runs-on: ubuntu-latest
-                env:
-                        VSCE_PAT: ${{ secrets.VSCE_PAT }}
+  publish:
+    name: Publish Extension
+    needs: package
+    runs-on: ubuntu-latest
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
-                steps:
-                        - name: Download VSIX artifact
-                          uses: actions/download-artifact@v4
-                          with:
-                                  name: ${{ needs.package.outputs.vsix_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-                        - name: Resolve publish target
-                          id: target
-                          shell: bash
-                          run: |
-                                  if [ "${{ github.event_name }}" = "push" ]; then
-                                    echo "publish_target=marketplace" >> "$GITHUB_OUTPUT"
-                                  else
-                                    echo "publish_target=${{ inputs.publish_target }}" >> "$GITHUB_OUTPUT"
-                                  fi
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
 
-                        - name: Publish to VS Marketplace
-                          if: steps.target.outputs.publish_target == 'marketplace' && env.VSCE_PAT != ''
-                          run: npx @vscode/vsce publish --packagePath "${{ needs.package.outputs.vsix_name }}" -p "$VSCE_PAT"
+      - name: Install dependencies
+        run: npm ci
 
-                        - name: Summary
-                          shell: bash
-                          run: |
-                                  {
-                                    echo "## Release summary"
-                                    echo ""
-                                    echo "- VSIX: \`${{ needs.package.outputs.vsix_name }}\`"
-                                    echo "- Target: \`${{ steps.target.outputs.publish_target }}\`"
-                                    echo "- VS Marketplace token configured: \`${{ env.VSCE_PAT != '' }}\`"
-                                    echo ""
-                                    echo "If publish was skipped, add \`VSCE_PAT\` and rerun the workflow."
-                                  } >> "$GITHUB_STEP_SUMMARY"
+      - name: Download VSIX artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.package.outputs.vsix_name }}
+
+      - name: Resolve publish target
+        id: target
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "publish_target=marketplace" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish_target=${{ inputs.publish_target }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to VS Marketplace
+        if: steps.target.outputs.publish_target == 'marketplace' && env.VSCE_PAT != ''
+        run: npx @vscode/vsce publish --packagePath "${{ needs.package.outputs.vsix_name }}" -p "$VSCE_PAT"
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo "## Release summary"
+            echo ""
+            echo "- VSIX: \`${{ needs.package.outputs.vsix_name }}\`"
+            echo "- Target: \`${{ steps.target.outputs.publish_target }}\`"
+            echo "- VS Marketplace token configured: \`${{ env.VSCE_PAT != '' }}\`"
+            echo ""
+            echo "If publish was skipped, add \`VSCE_PAT\` and rerun the workflow."
+          } >> "$GITHUB_STEP_SUMMARY"
