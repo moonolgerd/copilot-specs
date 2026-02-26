@@ -174,8 +174,14 @@ export async function buildStartTaskPrompt(
   parts.push(
     ``,
     `---`,
-    `Please implement the incomplete sub-tasks listed above.`,
-    `Use \`FILE: <path>\` blocks for any files you create or modify.`,
+    `## Implementation Instructions`,
+    ``,
+    `Please implement the **incomplete** sub-tasks listed above.`,
+    ``,
+    `1. **Read** the linked implementation files (and any other relevant project files) to understand the existing code before making changes.`,
+    `2. **Implement** the required changes following existing project conventions and patterns.`,
+    `3. **Verify** your changes compile and pass any existing tests.`,
+    `4. Focus only on what this specific task requires — do not refactor unrelated code.`,
   );
 
   return parts.join("\n");

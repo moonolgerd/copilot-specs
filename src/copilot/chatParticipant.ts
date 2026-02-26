@@ -1,10 +1,7 @@
 import * as vscode from "vscode";
 import { generateFullSpec, generateSpecContent } from "./specGenerator.js";
 import { loadSpec } from "../specManager.js";
-import {
-  preserveCompletedTaskStates,
-  markTaskAndSubtasksCompleted,
-} from "../taskManager.js";
+import { preserveCompletedTaskStates } from "../taskManager.js";
 import {
   readTextFile,
   fileExists,
@@ -14,7 +11,6 @@ import {
 } from "../utils/fileSystem.js";
 import { stripFrontmatter } from "../utils/frontmatter.js";
 import { buildStartTaskPrompt } from "./taskStarter.js";
-import { applyResponseAsEdit } from "../autopilot.js";
 
 interface ParsedCommand {
   action: "create" | "regenerate" | "implement" | "help";
@@ -73,12 +69,12 @@ function parseCommand(prompt: string): ParsedCommand {
 
 export function registerChatParticipant(
   context: vscode.ExtensionContext,
-  onTaskStart?: (specName: string, taskId: string) => void,
-  onTaskComplete?: (specName: string, taskId: string) => void,
+  _onTaskStart?: (specName: string, taskId: string) => void,
+  _onTaskComplete?: (specName: string, taskId: string) => void,
 ): void {
   const participant = vscode.chat.createChatParticipant(
     "copilot-specs.spec",
-    async (request, _chatContext, stream, token) => {
+    async (request, _chatContext, stream, _token) => {
       const parsed = parseCommand(request.prompt);
 
       if (parsed.action === "help") {
@@ -96,40 +92,17 @@ export function registerChatParticipant(
 
       if (parsed.action === "implement" && parsed.specName && parsed.taskId) {
         const { specName, taskId } = parsed;
-        onTaskStart?.(specName, taskId);
-        stream.markdown(
-          `## Implementing task **${taskId}** in spec: ${specName}\n\n`,
-        );
-
+        // Build and display the task context so the user can copy it to
+        // agent mode where the agent has full tool access (file reads,
+        // edits, terminal, etc.).  The @spec participant does NOT have
+        // tool access, so we no longer attempt a blind LLM call here.
         const contextPrompt = await buildStartTaskPrompt(specName, taskId);
-
-        const models = await vscode.lm.selectChatModels({ family: "gpt-4o" });
-        const model = models[0];
-        if (!model) {
-          stream.markdown(`> No Copilot model available.`);
-          return;
-        }
-
-        try {
-          const lmResponse = await model.sendRequest(
-            [vscode.LanguageModelChatMessage.User(contextPrompt)],
-            {},
-            token,
-          );
-          let fullResponse = "";
-          for await (const chunk of lmResponse.text) {
-            fullResponse += chunk;
-            stream.markdown(chunk);
-          }
-          await applyResponseAsEdit(fullResponse, taskId);
-        } catch (err) {
-          stream.markdown(`> Error generating implementation: ${err}`);
-          return;
-        }
-
-        await markTaskAndSubtasksCompleted(specName, taskId, true);
-        stream.markdown(`\n\n✅ Task **${taskId}** marked complete.`);
-        onTaskComplete?.(specName, taskId);
+        stream.markdown(contextPrompt);
+        stream.markdown(
+          `\n\n---\n> **Tip:** For best results, use the **Start Task** CodeLens button ` +
+            `which opens this prompt in agent mode where Copilot has full tool access ` +
+            `to read files, make edits, and run tests.\n`,
+        );
         return;
       }
 

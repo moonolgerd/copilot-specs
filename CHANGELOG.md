@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project follows Semantic Versioning.
 
+## [Unreleased]
+
+## [0.1.6] - 2026-02-26
+
+### Changed
+
+- **Start Task now opens in agent mode** — clicking "Start Task" builds a rich context prompt and opens it in Copilot agent mode (`mode: "agent"`) where the agent has full tool access to read files, make edits, and run tests. Previously it routed through `@spec implement` which made a blind LLM call with no tool access.
+- **Agent-friendly implementation instructions** — the task prompt no longer asks the model to produce `FILE:` blocks. Instead it instructs the agent to read linked files first, implement following project conventions, verify compilation/tests, and stay focused on the specific task.
+- **`@spec implement` no longer auto-applies code** — the chat participant `implement` action now displays the task context as a reference and suggests using the Start Task CodeLens for agent mode. Removed the direct `model.sendRequest()` call, `applyResponseAsEdit` auto-apply, and automatic task completion.
+
 ## [0.1.5] - 2026-02-26
 
 ### Changed

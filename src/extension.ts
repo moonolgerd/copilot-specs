@@ -49,6 +49,7 @@ import {
   initHooks,
 } from "./hooksManager.js";
 import { registerChatParticipant } from "./copilot/chatParticipant.js";
+import { buildStartTaskPrompt } from "./copilot/taskStarter.js";
 import { runAutopilot } from "./autopilot.js";
 import {
   listMcpConfigTargets,
@@ -657,10 +658,15 @@ export function activate(context: vscode.ExtensionContext): void {
         if (!specName || !id) {
           return;
         }
+        // Build a rich context prompt and open it in agent mode so the
+        // agent can read files, make edits, and run tests with full tool
+        // access — instead of routing through the @spec chat participant
+        // which only has a blind LLM call.
+        const prompt = await buildStartTaskPrompt(specName, id);
         await vscode.commands.executeCommand("workbench.action.chat.open", {
-          query: `@spec implement ${specName} ${id}`,
+          query: prompt,
+          mode: "agent",
         });
-        // Spinner is set by onTaskStart and cleared by onTaskComplete in registerChatParticipant.
       },
     ],
 
