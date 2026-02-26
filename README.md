@@ -20,8 +20,6 @@ Or search for `copilot-specs` in the VS Code Extensions panel (`Ctrl+Shift+X`).
 
 ![CodeLens linking tasks to implementation files](media/image-1.png)
 
-![Spec panel with requirements, design, and tasks](media/image-2.png)
-
 ![Tasks marked completed](media/image-3.png)
 
 ## Features
@@ -36,7 +34,7 @@ Or search for `copilot-specs` in the VS Code Extensions panel (`Ctrl+Shift+X`).
 - **Task tracking + progress**
   - Parse markdown checkbox tasks and subtasks
   - Track completion progress per spec
-  - Show spec progress in the status bar and panel
+  - Show spec progress in the status bar
 
 - **Traceability with CodeLens**
   - Link requirements ↔ tasks
@@ -46,6 +44,7 @@ Or search for `copilot-specs` in the VS Code Extensions panel (`Ctrl+Shift+X`).
 - **Copilot integration**
   - Generate requirements, design, and tasks with chat participant commands
   - Start Task opens a rich context prompt in **agent mode** — the agent can read files, make edits, and run tests
+  - Verify All Tasks opens a spec-wide **agent-mode verification prompt** to validate completion against the codebase
 
 - **Project guidance + tooling**
   - Instructions, rules, skills, and prompts explorer
@@ -70,6 +69,7 @@ Or search for `copilot-specs` in the VS Code Extensions panel (`Ctrl+Shift+X`).
    @spec create a user authentication feature
    ```
 5. Click **Start Task** on any task — a rich context prompt opens in agent mode where Copilot can read your code, make edits, and verify the result.
+6. Click **Verify All Tasks with Copilot** on a spec row to run a full completion verification workflow in agent mode.
 
 ## Development
 
@@ -112,8 +112,9 @@ npm run lint
 3. Press `F5` to launch the Extension Development Host.
 4. In the new window, run commands from the Command Palette, such as:
    - `Copilot Specs: New Spec`
-   - `Copilot Specs: Open Spec Panel`
    - `Copilot Specs: Generate with Copilot`
+
+- `Copilot Specs: Verify All Tasks with Copilot`
 
 ## CI/CD
 
@@ -197,6 +198,7 @@ Hook files live in `.github/hooks/*.json` in your workspace. Each file contains 
 
 MCP server configurations are discovered from the following JSONC files (in priority order):
 
+- `.github/mcp.json` — workspace-level (preferred)
 - `.vscode/mcp.json` — workspace-level
 - `.mcp.json` — project-level
 - `mcp.json` — root-level
@@ -220,7 +222,7 @@ Each file follows the VS Code MCP server schema:
 }
 ```
 
-The Copilot Specs MCP explorer lists all discovered servers and lets you toggle them on/off via the tree view. Toggling sets or removes the server entry from the applicable config file.
+The Copilot Specs MCP explorer lists all discovered servers and lets you toggle them on/off via the tree view. Toggling updates the server `enabled` state in the applicable config file.
 
 ## License
 

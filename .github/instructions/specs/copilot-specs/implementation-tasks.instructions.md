@@ -63,3 +63,23 @@ applyTo: "src/**"
   - [x] Include full task context (requirements text, design doc excerpt, linked file paths) in the chat prompt
   - [x] Open prompt in agent mode (`mode: "agent"`) instead of routing through `@spec implement` participant
   - [x] Use agent-friendly instructions (read files first, follow conventions, verify compilation) instead of `FILE:` block format
+
+- [x] **T10**: Add prompt authoring and format updates
+  - [x] Add Prompt option to steering creation flow and dedicated New Prompt action on Prompts section
+  - [x] Generate prompt files with `agent: "agent"` frontmatter
+  - [x] Generate skill files with frontmatter (`name`, `description`)
+
+- [x] **T11**: Improve hooks and MCP toggling UX and persistence
+  - [x] Persist hook enabled/disabled state in hook JSON entries
+  - [x] Add explicit Enable/Disable actions for Hook and MCP items
+  - [x] Update MCP file creation defaults to use `servers` schema
+
+- [x] **T12**: Align spec and MCP navigation flows
+  - [x] Remove Open Spec Panel command and panel implementation
+  - [x] Add inline Run All Tasks action on spec rows
+  - [x] Route Run All Tasks to agent-mode verification prompt instead of direct autopilot execution
+  - [x] Make Workspace MCP source open/create `.github/mcp.json` with valid default content
+
+- [x] **T13**: Documentation and template consistency
+  - [x] Fix malformed `name` placeholders in spec templates
+  - [x] Update README and changelog for new workflows and config behavior

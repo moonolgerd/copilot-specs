@@ -67,13 +67,13 @@ The extension is implemented as a VS Code extension centered around `activate()`
 
 #### Webview panel
 
-- `webview/specPanel.ts` renders requirements/design/tasks tabs
-- Tracks progress and supports task toggles plus “Generate with Copilot”.
+- Spec webview panel was removed; spec interaction now flows through tree views, CodeLens, and chat actions.
 
 #### Hooks and MCP
 
 - `hooksManager.ts` manages `.github/hooks/*.json` command entries
 - `mcpManager.ts` discovers server configs, parses JSONC, and toggles `enabled`.
+- Workspace MCP source click opens `.github/mcp.json`; creates a valid file (`{"servers": {}}`) when missing.
 
 #### Start Task inline action
 
@@ -87,6 +87,12 @@ The extension is implemented as a VS Code extension centered around `activate()`
 - The prompt instructs the agent to: read linked files first, implement following project conventions, verify compilation/tests, and stay focused on the specific task.
 - Task completion is left to the user (via the Mark Complete CodeLens or tree action) rather than being auto-applied.
 
+#### Verify All Tasks action
+
+- Spec rows expose a `Run/Verify All Tasks` action.
+- The command builds a spec-wide verification prompt containing all tasks, completion summary, and relevant file locations.
+- It opens Copilot Chat in agent mode for verification instead of directly launching autopilot.
+
 ## Key Modules
 
 - `src/extension.ts` — composition root, watchers, commands, lifecycle
@@ -95,7 +101,6 @@ The extension is implemented as a VS Code extension centered around `activate()`
 - `src/codeLensProvider.ts` — spec/task requirement CodeLens and link automation
 - `src/specProvider.ts` — tree view providers and items
 - `src/statusBar.ts` — progress status bar item
-- `src/webview/specPanel.ts` — spec panel webview UI
 - `src/copilot/specGenerator.ts` — chat-based content generation
 - `src/autopilot.ts` — task-by-task implementation runner
 - `src/copilot/taskStarter.ts` — focused single-task chat prompt builder for the Start Task action

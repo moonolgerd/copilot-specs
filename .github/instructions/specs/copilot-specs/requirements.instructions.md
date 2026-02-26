@@ -47,12 +47,12 @@ AND list `.github/prompts/*.prompt.md` files under a Prompts section in the Inst
 
 WHEN at least one spec exists
 THE SYSTEM SHALL show status bar progress for the most pending spec
-AND open the spec panel when the status item is clicked.
+AND keep status values in sync as task completion changes.
 
 ### REQ-04: CodeLens Mapping and Traceability
 
 WHEN a code file matches a spec `applyTo` glob or manual task links
-THE SYSTEM SHALL render CodeLens entries that open the spec panel or related tasks.
+THE SYSTEM SHALL render CodeLens entries that open related tasks or spec mapping actions.
 
 WHEN viewing tasks or requirements documents
 THE SYSTEM SHALL render CodeLens entries for requirement-to-task and task-to-implementation navigation
@@ -84,6 +84,10 @@ WHEN MCP config files are present in workspace or user locations
 THE SYSTEM SHALL list discovered servers grouped by source
 AND allow toggling server enabled state by updating the owning config file.
 
+WHEN the user clicks the Workspace MCP source item
+THE SYSTEM SHALL open `.github/mcp.json`
+AND if it does not exist, create a valid config file with `{"servers": {}}`.
+
 ### REQ-07: Start Task Inline Action
 
 WHEN a task is incomplete and visible in the Spec Explorer tree
@@ -98,13 +102,9 @@ THE SYSTEM SHALL build a rich context prompt containing the spec name, task ID, 
 AND open the prompt in Copilot agent mode (`mode: "agent"`) where the agent has full tool access to read files, make edits, and run tests
 AND instruct the agent to read existing code first, implement following project conventions, and verify compilation.
 
-### REQ-08: Spec Panel Interactive Task Rendering
+### REQ-08: Verify All Tasks Workflow
 
-WHEN the spec panel displays the Tasks tab
-THE SYSTEM SHALL render tasks from the parsed `Task[]` model rather than from raw markdown HTML
-AND each task SHALL be displayed as an enabled checkbox with its title and completion state
-AND subtasks SHALL be rendered indented beneath their parent task.
-
-WHEN the user clicks a task checkbox in the spec panel
-THE SYSTEM SHALL toggle the task completion state in the markdown file
-AND refresh the panel to reflect the updated progress.
+WHEN the user clicks Run/Verify All Tasks from a spec row
+THE SYSTEM SHALL open Copilot Chat in agent mode with a spec-wide verification prompt
+AND include task summary and spec file context in the prompt
+AND instruct the agent to validate task completion against code and update task states accordingly.

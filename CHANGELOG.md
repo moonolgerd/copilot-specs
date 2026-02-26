@@ -8,9 +8,29 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 
 ## [0.1.7] - 2026-02-26
 
+### Added
+
+- **Prompt creation in Instructions & Skills** — the `+` flow now supports creating prompts (`.github/prompts/*.prompt.md`) in addition to rules and skills.
+- **Dedicated Prompts quick action** — added a direct `New Prompt` action on the Prompts section in the tree view.
+- **Inline spec-row Run All action** — added an inline action on spec rows for running the all-tasks workflow.
+- **Persistent Hook toggle state** — hook command entries now support persisted `enabled` state and command-index targeting for reliable toggling.
+
 ### Changed
 
 - Bumped extension version to `0.1.7`.
+- **Run All Tasks workflow now verifies via agent chat** — `Run All Tasks` now opens Copilot Chat in agent mode with a spec-wide verification prompt (task summary, file paths, verification instructions) instead of directly launching autopilot execution.
+- **Toggle visuals for Hooks and MCP servers** — replaced generic toggle presentation with explicit Enable/Disable actions and clearer inline controls.
+- **MCP Workspace source behavior** — clicking the `Workspace` source now opens `.github/mcp.json`; if missing, the extension creates a valid config file automatically.
+- **MCP default config schema for new files** — MCP file creation now initializes with `servers` (not `mcpServers`).
+- **MCP discovery now includes `.github/mcp.json`** — workspace target discovery and watchers include `.github/mcp.json` for consistent refresh/open behavior.
+- **Skill scaffold format** — newly created `SKILL.md` files now use frontmatter format (`name`, `description`) instead of heading/body placeholders.
+- **Prompt scaffold attribute updated** — generated prompt frontmatter now writes `agent: "agent"`.
+- **Spec templates fixed** — corrected malformed `name` placeholder token to `name: "{{SPEC_NAME}}"` in requirements/design/tasks templates.
+- **Copilot Specs sidebar coloring** — added theme-aware icon colors for spec, steering, hooks, and MCP tree items for better visual scanning.
+
+### Removed
+
+- **Spec Panel feature removed** — removed `Open Spec Panel` command/menu flows, related auto-open behavior, and deleted the unused webview panel implementation.
 
 ## [0.1.6] - 2026-02-26
 
