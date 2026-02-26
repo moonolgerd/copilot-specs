@@ -3,16 +3,26 @@
 [![CI](https://github.com/moonolgerd/copilot-specs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/moonolgerd/copilot-specs/actions/workflows/ci.yml)
 [![Release](https://github.com/moonolgerd/copilot-specs/actions/workflows/release.yml/badge.svg)](https://github.com/moonolgerd/copilot-specs/actions/workflows/release.yml)
 [![VS Marketplace](https://img.shields.io/visual-studio-marketplace/v/moonolgerd.copilot-specs?label=VS%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=moonolgerd.copilot-specs)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/moonolgerd.copilot-specs?label=Installs)](https://marketplace.visualstudio.com/items?itemName=moonolgerd.copilot-specs)
+[![Rating](https://img.shields.io/visual-studio-marketplace/r/moonolgerd.copilot-specs?label=Rating)](https://marketplace.visualstudio.com/items?itemName=moonolgerd.copilot-specs)
 
 Spec-driven development for VS Code + GitHub Copilot.
 
-`copilot-specs` helps teams plan and implement features through structured **requirements**, **design**, and **implementation tasks** documents, then connect those documents back to real code with explorers, CodeLens, and automation.
+`copilot-specs` bridges the gap between planning and implementation — write structured **requirements**, **design**, and **task** documents, then have GitHub Copilot generate and execute them against your codebase. Every task links back to real source files via CodeLens so nothing gets lost.
 
-![alt text](media/image.png)
+## Install
 
-![alt text](media/image-1.png)
+**[Install from the VS Code Marketplace →](https://marketplace.visualstudio.com/items?itemName=moonolgerd.copilot-specs)**
 
-![alt text](media/image-2.png)
+Or search for `copilot-specs` in the VS Code Extensions panel (`Ctrl+Shift+X`).
+
+![Spec explorer and task progress in the sidebar](media/image.png)
+
+![CodeLens linking tasks to implementation files](media/image-1.png)
+
+![Spec panel with requirements, design, and tasks](media/image-2.png)
+
+![Tasks marked completed](media/image-3.png)
 
 ## Features
 
@@ -44,11 +54,26 @@ Spec-driven development for VS Code + GitHub Copilot.
 
 ## Requirements
 
-- Node.js **22+**
 - VS Code **1.93+**
-- GitHub Copilot Chat (for generation/autopilot features)
+- GitHub Copilot Chat (for AI generation and autopilot features)
+
+## Quick Start
+
+1. Install the extension from the [Marketplace](https://marketplace.visualstudio.com/items?itemName=moonolgerd.copilot-specs).
+2. Open a workspace and run `Copilot Specs: New Spec` from the Command Palette (`Ctrl+Shift+P`).
+3. Enter a name — three scaffold files are created under `.github/instructions/specs/<name>/`:
+   - `requirements.instructions.md` — define what to build
+   - `design.instructions.md` — describe the architecture
+   - `implementation-tasks.instructions.md` — break work into checkable tasks
+4. Use the **@spec** chat participant in Copilot Chat to generate content:
+   ```
+   @spec create a user authentication feature
+   ```
+5. Run `Copilot Specs: Start Task` on any task to trigger autopilot execution.
 
 ## Development
+
+**Prerequisites:** Node.js 22+
 
 Install dependencies:
 

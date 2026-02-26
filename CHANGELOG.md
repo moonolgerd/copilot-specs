@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project follows Semantic Versioning.
 
+## [0.1.5] - 2026-02-26
+
+### Changed
+
+- Added Marketplace `keywords` (`copilot`, `specifications`, `requirements`, `task-management`, `ai`) for improved discoverability.
+- Added `galleryBanner` dark theme to the Marketplace listing.
+- Improved `README.md`: added Install section with direct Marketplace link, Installs and Rating badges, descriptive screenshot captions, and a Quick Start walkthrough.
+
 ## [0.1.4] - 2026-02-25
 
 ### Added
