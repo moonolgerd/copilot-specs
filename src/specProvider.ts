@@ -155,6 +155,23 @@ export class SkillItem extends vscode.TreeItem {
   }
 }
 
+export class PromptItem extends vscode.TreeItem {
+  constructor(
+    public readonly promptName: string,
+    public readonly filePath: string,
+  ) {
+    super(promptName, vscode.TreeItemCollapsibleState.None);
+    this.contextValue = "prompt";
+    this.iconPath = new vscode.ThemeIcon("comment-discussion");
+    this.resourceUri = vscode.Uri.file(filePath);
+    this.command = {
+      command: "vscode.open",
+      title: "Open Prompt",
+      arguments: [vscode.Uri.file(filePath)],
+    };
+  }
+}
+
 export class RulesFileItem extends vscode.TreeItem {
   constructor(
     public readonly name: string,
@@ -174,7 +191,7 @@ export class RulesFileItem extends vscode.TreeItem {
 
 export class SectionItem extends vscode.TreeItem {
   constructor(
-    public readonly kind: "instructions" | "rules" | "skills",
+    public readonly kind: "instructions" | "rules" | "skills" | "prompts",
     label: string,
     icon: string,
     childCount: number,
@@ -207,6 +224,9 @@ export class SteeringProvider implements vscode.TreeDataProvider<vscode.TreeItem
     private readonly getSkills: () => Promise<
       { name: string; filePath: string }[]
     >,
+    private readonly getPrompts: () => Promise<
+      { name: string; filePath: string }[]
+    > = async () => [],
   ) {}
 
   refresh(): void {
@@ -232,16 +252,21 @@ export class SteeringProvider implements vscode.TreeDataProvider<vscode.TreeItem
           return (await this.getSkills()).map(
             (s) => new SkillItem(s.name, s.filePath),
           );
+        case "prompts":
+          return (await this.getPrompts()).map(
+            (p) => new PromptItem(p.name, p.filePath),
+          );
       }
     }
     if (element) {
       return [];
     }
 
-    const [instructions, rules, skills] = await Promise.all([
+    const [instructions, rules, skills, prompts] = await Promise.all([
       this.getInstructions(),
       this.getRules(),
       this.getSkills(),
+      this.getPrompts(),
     ]);
 
     return [
@@ -253,6 +278,12 @@ export class SteeringProvider implements vscode.TreeDataProvider<vscode.TreeItem
       ),
       new SectionItem("rules", "Rules", "symbol-ruler", rules.length),
       new SectionItem("skills", "Skills", "sparkle", skills.length),
+      new SectionItem(
+        "prompts",
+        "Prompts",
+        "comment-discussion",
+        prompts.length,
+      ),
     ];
   }
 }

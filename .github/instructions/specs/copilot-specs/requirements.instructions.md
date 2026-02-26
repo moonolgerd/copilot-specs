@@ -40,8 +40,10 @@ AND preserve the rest of the document structure.
 
 WHEN the extension is activated
 THE SYSTEM SHALL show a Spec Explorer tree with each spec and its requirements/design/tasks files
-AND show Steering + Skills, Hooks, and MCP Servers trees
+AND show an Instructions & Skills tree with Instructions, Rules, Skills, and Prompts sections
+AND show Hooks and MCP Servers trees
 AND refresh trees when relevant files change.
+AND list `.github/prompts/*.prompt.md` files under a Prompts section in the Instructions & Skills tree.
 
 WHEN at least one spec exists
 THE SYSTEM SHALL show status bar progress for the most pending spec
@@ -69,6 +71,9 @@ THE SYSTEM SHALL load pending tasks for a selected spec
 AND request implementation output from the selected Copilot model
 AND parse `FILE: <path>` code blocks into workspace edits
 AND mark a task complete after execution flow succeeds.
+WHEN the `@spec implement` chat participant command is used
+THE SYSTEM SHALL display the task context as a reference
+AND recommend using the Start Task CodeLens for agent mode instead.
 
 ### REQ-06: Hook and MCP Management
 
@@ -89,12 +94,9 @@ THE SYSTEM SHALL show `$(circle-large-outline) Start task` CodeLens on incomplet
 AND show `$(pass-filled) Task Completed` CodeLens when all subtasks under that heading are checked.
 
 WHEN the user activates the Start Task action for an incomplete task
-THE SYSTEM SHALL open a focused Copilot Chat session
-AND pre-populate the prompt with the spec name, task ID, task title, and any linked requirement IDs
-AND include relevant context: the matching requirements text, a design doc excerpt, and the paths of any linked implementation files.
-
-WHEN the Copilot Chat session opened by Start Task is closed or resolved
-THE SYSTEM SHALL prompt the user to mark the task as complete.
+THE SYSTEM SHALL build a rich context prompt containing the spec name, task ID, task title, linked requirement IDs, matching requirements text, a design doc excerpt, and linked implementation file paths
+AND open the prompt in Copilot agent mode (`mode: "agent"`) where the agent has full tool access to read files, make edits, and run tests
+AND instruct the agent to read existing code first, implement following project conventions, and verify compilation.
 
 ### REQ-08: Spec Panel Interactive Task Rendering
 

@@ -60,10 +60,12 @@ import {
   INSTRUCTIONS_SPECS_DIR,
   INSTRUCTIONS_DIR,
   HOOKS_DIR,
+  PROMPTS_DIR,
   copilotInstructionsUri,
   fileExists,
   listSkillFiles,
   listInstructionRulesFiles,
+  listPromptFiles,
   ensureGitignoreEntry,
 } from "./utils/fileSystem.js";
 import { Task } from "./models/index.js";
@@ -100,6 +102,10 @@ export function activate(context: vscode.ExtensionContext): void {
     async () => {
       const skills = await listSkillFiles();
       return skills.map((s) => ({ name: s.name, filePath: s.uri.fsPath }));
+    },
+    async () => {
+      const prompts = await listPromptFiles();
+      return prompts.map((p) => ({ name: p.name, filePath: p.uri.fsPath }));
     },
   );
   const hooksProvider = new HooksProvider(async () => {
@@ -236,6 +242,7 @@ export function activate(context: vscode.ExtensionContext): void {
     steeringProvider.refresh(),
   );
   makeWatcher(".github/skills/**", () => steeringProvider.refresh());
+  makeWatcher(`${PROMPTS_DIR}/**`, () => steeringProvider.refresh());
 
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((document) => {

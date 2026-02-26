@@ -14,11 +14,11 @@ The extension is implemented as a VS Code extension centered around `activate()`
 1. Initialize templates and hook support (`initTemplates`, `initHooks`)
 2. Register tree data providers for:
    - Specs
-   - Steering + Skills
+   - Steering + Skills + Prompts (Instructions, Rules, Skills, and Prompts sections)
    - Hooks
    - MCP Servers (two view IDs)
 3. Register CodeLens provider across file scheme documents
-4. Register file watchers for spec instructions, hooks, MCP configs, and steering files
+4. Register file watchers for spec instructions, hooks, MCP configs, steering files, and prompts
 5. Register command handlers and chat participant
 6. Initialize status bar and refresh state.
 
@@ -78,13 +78,14 @@ The extension is implemented as a VS Code extension centered around `activate()`
 #### Start Task inline action
 
 - Incomplete task tree items expose a `$(play)` inline icon via `viewItem == task-incomplete` context menu condition in `package.json`.
-- The `copilot-specs.startTask` command accepts a task tree item; it resolves the spec name and task ID, then builds a focused prompt.
-- Prompt construction (in `autopilot.ts` or a new `src/copilot/taskStarter.ts`):
+- The `copilot-specs.startTask` command accepts a task tree item; it resolves the spec name and task ID, then builds a rich context prompt via `buildStartTaskPrompt()` in `src/copilot/taskStarter.ts`.
+- Prompt construction:
   1. Load requirements and design doc text via `readTextFile`.
   2. Resolve linked implementation files from `.copilot-specs-cache/<spec>.links.json`.
-  3. Compose a chat message containing spec name, task ID/title, requirement IDs, relevant requirement passages, design excerpt, and file paths.
-- Opens a Copilot Chat panel via `vscode.commands.executeCommand('workbench.action.chat.open', { query })` with the pre-populated prompt.
-- After the user closes or resolves the chat, a VS Code information message asks whether to mark the task complete; confirming calls `setTaskCompleted`.
+  3. Compose a prompt containing spec name, task ID/title, requirement IDs, relevant requirement passages, design excerpt, linked file paths, and agent-friendly implementation instructions.
+- Opens Copilot Chat in **agent mode** via `vscode.commands.executeCommand('workbench.action.chat.open', { query, mode: 'agent' })`. The agent has full tool access to read files, make edits, and run tests — unlike the `@spec implement` participant which has no tool access.
+- The prompt instructs the agent to: read linked files first, implement following project conventions, verify compilation/tests, and stay focused on the specific task.
+- Task completion is left to the user (via the Mark Complete CodeLens or tree action) rather than being auto-applied.
 
 ## Key Modules
 
@@ -115,6 +116,7 @@ The extension is implemented as a VS Code extension centered around `activate()`
 - Auto-linking is debounced to reduce noise on frequent file changes
 - MCP JSON parser tolerates comments and trailing commas for compatibility
 - Autopilot applies full-file edits from model output and expects strict `FILE:` block format.
+- Start Task uses agent mode rather than direct `model.sendRequest()` so the agent can read existing code before editing.
 
 ## Open Questions
 

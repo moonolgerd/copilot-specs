@@ -8,6 +8,10 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 
 ## [0.1.6] - 2026-02-26
 
+### Added
+
+- **Prompts section in Instructions & Skills panel** — `.github/prompts/*.prompt.md` files are now listed under a new "Prompts" collapsible section in the Steering explorer, with a `comment-discussion` icon. A file watcher auto-refreshes the section when prompt files are added, changed, or deleted.
+
 ### Changed
 
 - **Start Task now opens in agent mode** — clicking "Start Task" builds a rich context prompt and opens it in Copilot agent mode (`mode: "agent"`) where the agent has full tool access to read files, make edits, and run tests. Previously it routed through `@spec implement` which made a blind LLM call with no tool access.

@@ -113,6 +113,7 @@ export const INSTRUCTIONS_DIR = ".github/instructions";
 export const INSTRUCTIONS_SPECS_DIR = ".github/instructions/specs";
 export const SKILLS_DIR = ".github/skills";
 export const HOOKS_DIR = ".github/hooks";
+export const PROMPTS_DIR = ".github/prompts";
 export const PROMPTS_SPECS_DIR = ".github/prompts/specs";
 export const COPILOT_INSTRUCTIONS_FILE = ".github/copilot-instructions.md";
 
@@ -177,6 +178,30 @@ export async function listSkillFiles(): Promise<
   return [...skillsByPath.values()].sort((a, b) =>
     a.name.localeCompare(b.name),
   );
+}
+
+/**
+ * List prompt files under .github/prompts/ (top-level .prompt.md files only,
+ * excludes the specs/ subdirectory).
+ */
+export async function listPromptFiles(): Promise<
+  { name: string; uri: vscode.Uri }[]
+> {
+  const dir = resolveWorkspacePath(PROMPTS_DIR);
+  if (!dir || !(await fileExists(dir))) {
+    return [];
+  }
+  const entries = await vscode.workspace.fs.readDirectory(dir);
+  return entries
+    .filter(
+      ([name, type]) =>
+        type === vscode.FileType.File && name.endsWith(".prompt.md"),
+    )
+    .map(([name]) => ({
+      name: name.replace(/\.prompt\.md$/, ""),
+      uri: vscode.Uri.joinPath(dir, name),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export function specsInstructionsUri(specName: string): vscode.Uri | undefined {

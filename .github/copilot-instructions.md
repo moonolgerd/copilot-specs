@@ -14,7 +14,8 @@ src/specManager.ts        ← Spec CRUD: create/list/load/delete/rename specs.
 src/taskManager.ts        ← Markdown task parser + completion toggler.
 src/codeLensProvider.ts   ← CodeLens for source files, task docs, requirement docs.
                             Caches task↔file links in .copilot-specs-cache/.
-src/specProvider.ts       ← TreeDataProviders (SpecProvider, SteeringProvider,
+src/specProvider.ts       ← TreeDataProviders (SpecProvider, SteeringProvider
+                            with Instructions/Rules/Skills/Prompts sections,
                             HooksProvider, MCPServersProvider).
 src/statusBar.ts          ← SpecStatusBar showing active-spec task progress.
 src/webview/specPanel.ts  ← Full webview panel for spec editing/display.

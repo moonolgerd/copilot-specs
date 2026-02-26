@@ -45,10 +45,10 @@ Or search for `copilot-specs` in the VS Code Extensions panel (`Ctrl+Shift+X`).
 
 - **Copilot integration**
   - Generate requirements, design, and tasks with chat participant commands
-  - Run autopilot task execution flow from spec tasks
+  - Start Task opens a rich context prompt in **agent mode** — the agent can read files, make edits, and run tests
 
 - **Project guidance + tooling**
-  - Steering and skills explorer
+  - Instructions, rules, skills, and prompts explorer
   - Agent hooks explorer (`.github/hooks/*.json`)
   - MCP servers explorer and toggle support
 
@@ -69,7 +69,7 @@ Or search for `copilot-specs` in the VS Code Extensions panel (`Ctrl+Shift+X`).
    ```
    @spec create a user authentication feature
    ```
-5. Run `Copilot Specs: Start Task` on any task to trigger autopilot execution.
+5. Click **Start Task** on any task — a rich context prompt opens in agent mode where Copilot can read your code, make edits, and verify the result.
 
 ## Development
 
@@ -150,6 +150,7 @@ Manual release is also available through the GitHub Actions UI.
 - `src/` — extension source
 - `src/templates/` — default spec templates
 - `.github/instructions/specs/` — generated/managed spec docs in a workspace
+- `.github/prompts/` — reusable prompt files (`.prompt.md`)
 - `.github/hooks/` — hook JSON definitions
 
 ## Hook JSON format

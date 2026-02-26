@@ -23,6 +23,7 @@ applyTo: "src/**"
   - [x] Add tree views for specs, steering/skills, hooks, and MCP servers
   - [x] Register file watchers and refresh providers on changes
   - [x] Show status bar progress and open panel command integration
+  - [x] Add Prompts section to Instructions & Skills panel listing `.github/prompts/*.prompt.md` files
 
 - [x] **T4**: Implement CodeLens traceability features <!-- requires:REQ-04 -->
   - [x] Show file-level spec/task CodeLens for matched files
@@ -35,6 +36,7 @@ applyTo: "src/**"
   - [x] Generate section content and persist to spec files
   - [x] Execute pending tasks via model responses and apply workspace edits
   - [x] Preserve completed task states when regenerating tasks via `applyCompletedIds` / `preserveCompletedTaskStates`
+  - [x] Change `@spec implement` to display context only (no blind LLM call or auto-apply)
 
 - [x] **T6**: Support steering, hooks, and MCP management <!-- requires:REQ-06 -->
   - [x] Read and append managed steering sections
@@ -59,4 +61,5 @@ applyTo: "src/**"
   - [x] Parse heading-style (`### T1: Title`) task documents: derive completion from child checkboxes
   - [x] Show `$(circle-large-outline) Start task` / `$(pass-filled) Task Completed` CodeLens on heading-style task lines
   - [x] Include full task context (requirements text, design doc excerpt, linked file paths) in the chat prompt
-  - [x] After the chat session completes, prompt the user to mark the task complete
+  - [x] Open prompt in agent mode (`mode: "agent"`) instead of routing through `@spec implement` participant
+  - [x] Use agent-friendly instructions (read files first, follow conventions, verify compilation) instead of `FILE:` block format
