@@ -727,6 +727,17 @@ export function activate(context: vscode.ExtensionContext): void {
         // access — instead of routing through the @spec chat participant
         // which only has a blind LLM call.
         const prompt = await buildStartTaskPrompt(specName, id);
+
+        // Start each task in its own local chat session so it appears as a
+        // distinct item in Copilot's agent tasks/session list.
+        try {
+          await vscode.commands.executeCommand(
+            "workbench.action.chat.newLocalChat",
+          );
+        } catch {
+          // Fallback to opening chat directly when this command is unavailable.
+        }
+
         await vscode.commands.executeCommand("workbench.action.chat.open", {
           query: prompt,
           mode: "agent",
@@ -785,6 +796,17 @@ export function activate(context: vscode.ExtensionContext): void {
         }
 
         const prompt = await buildRunAllTasksVerificationPrompt(name);
+
+        // Start verification in its own local chat session so it appears as a
+        // distinct item in Copilot's agent tasks/session list.
+        try {
+          await vscode.commands.executeCommand(
+            "workbench.action.chat.newLocalChat",
+          );
+        } catch {
+          // Fallback to opening chat directly when this command is unavailable.
+        }
+
         await vscode.commands.executeCommand("workbench.action.chat.open", {
           query: prompt,
           mode: "agent",

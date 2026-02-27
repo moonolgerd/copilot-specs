@@ -6,6 +6,14 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-02-27
+
+### Changed
+
+- Bumped extension version to `0.1.8`.
+- **Start Task now opens as a distinct agent task/session** — clicking `Start Task` now creates a new local chat session before opening agent mode with the generated prompt, so each started task is tracked as its own Copilot agent task/session.
+- **Verify All Tasks now opens as a distinct agent task/session** — clicking `Run/Verify All Tasks` now also creates a new local chat session before opening agent mode, keeping verification runs isolated and easier to track in Copilot agent sessions.
+
 ## [0.1.7] - 2026-02-26
 
 ### Added
@@ -131,7 +139,8 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 - Release workflow for VSIX packaging and VS Marketplace publishing.
 - Repository documentation (`README.md`) and MIT license (`LICENSE`).
 
-[Unreleased]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.8...HEAD
+[0.1.8]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.4...v0.1.5
