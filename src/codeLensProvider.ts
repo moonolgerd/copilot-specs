@@ -855,9 +855,6 @@ export async function linkCurrentFileToTask(specProvider: {
 
   const specs = await listSpecs();
   if (specs.length === 0) {
-    vscode.window.showInformationMessage(
-      "No specs found. Create a spec first.",
-    );
     return;
   }
 
@@ -906,9 +903,6 @@ export async function linkExistingTaskToImplementation(
 ): Promise<void> {
   const specs = await listSpecs();
   if (specs.length === 0) {
-    vscode.window.showInformationMessage(
-      "No specs found. Create a spec first.",
-    );
     return;
   }
 

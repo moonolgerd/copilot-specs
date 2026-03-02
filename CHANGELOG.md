@@ -6,6 +6,12 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-03-02
+
+### Changed
+
+- Removed redundant "No specs found. Create a spec first." info messages; empty-spec guards now return silently.
+
 ## [0.1.8] - 2026-02-27
 
 ### Changed

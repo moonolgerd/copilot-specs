@@ -551,9 +551,6 @@ export function activate(context: vscode.ExtensionContext): void {
         if (!name) {
           const specs = await listSpecs();
           if (specs.length === 0) {
-            vscode.window.showInformationMessage(
-              "No specs found. Create a spec first.",
-            );
             return;
           }
           const pick = await vscode.window.showQuickPick(
@@ -779,9 +776,6 @@ export function activate(context: vscode.ExtensionContext): void {
         if (!name) {
           const specs = await listSpecs();
           if (specs.length === 0) {
-            vscode.window.showInformationMessage(
-              "No specs found. Create a spec first.",
-            );
             return;
           }
 
