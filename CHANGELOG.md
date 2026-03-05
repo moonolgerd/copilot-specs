@@ -6,6 +6,14 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 
 ## [Unreleased]
 
+## [0.1.12] - 2026-03-05
+
+### Changed
+
+- Bumped extension version to `0.1.12`.
+- Release workflow now packages and publishes a second extension variant named **Kiro for Copilot** in addition to `copilot-specs`.
+- Kiro for Copilot publishing now uses the same `VSCE_PAT` and `OPEN_VSX_TOKEN` secrets as the base extension.
+
 ## [0.1.11] - 2026-03-05
 
 ### Fixed
@@ -13,7 +21,7 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 - **Start Task progress spinner** — clicking Start Task now shows a notification progress indicator while building the task prompt, instead of silently blocking.
 - **Agent sessions route to Tasks tab** — removed the `workbench.action.chat.newLocalChat` pre-call from Start Task and Verify All Tasks; sessions now correctly appear in Copilot's Tasks panel instead of the Chats panel.
 
-## [0.1.10]- 2026-03-04
+## [0.1.10] - 2026-03-04
 
 ### Changed
 
@@ -160,7 +168,9 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 - Release workflow for VSIX packaging and VS Marketplace publishing.
 - Repository documentation (`README.md`) and MIT license (`LICENSE`).
 
-[Unreleased]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.10...HEAD
+[Unreleased]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.12...HEAD
+[0.1.12]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.11...v0.1.12
+[0.1.11]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.7...v0.1.8
