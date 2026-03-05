@@ -62,7 +62,10 @@ jobs:
         shell: bash
         run: |
           cp package.json package.json.bak
-          trap 'mv package.json.bak package.json' EXIT
+          cp README.md README.md.bak
+          trap 'mv package.json.bak package.json; mv README.md.bak README.md' EXIT
+
+          cp README.kiro.md README.md
 
           node <<'NODE'
           const fs = require("node:fs");
@@ -70,6 +73,7 @@ jobs:
 
           packageJson.name = "kiro-for-copilot";
           packageJson.displayName = "Kiro for Copilot";
+          packageJson.description = "Kiro-style spec-driven development inside VS Code — requirements, design, and task tracking powered by GitHub Copilot.";
 
           fs.writeFileSync("package.json", `${JSON.stringify(packageJson, null, 2)}\n`);
           NODE
