@@ -127,8 +127,8 @@ Workflows are in `.github/workflows/`:
 
 - `release.yml`
   - Runs on tag push `v*` or manual dispatch
-  - Packages a `.vsix` artifact
-  - Publishes to VS Marketplace and/or Open VSX based on selected target and configured tokens
+  - Packages two `.vsix` artifacts: `copilot-specs` and `Kiro for Copilot`
+  - Publishes both extensions to VS Marketplace and/or Open VSX based on selected target and configured tokens
 
 Publishing secrets:
 
@@ -155,7 +155,7 @@ Manual `publish_target` options:
 - `open-vsx`
 - `both`
 
-On tag pushes (`v*`), the release workflow uses `both` and publishes each target when its matching token is configured.
+On tag pushes (`v*`), the release workflow uses `both` and attempts to publish both extensions to each selected marketplace using the configured base tokens.
 
 ## Repository layout
 

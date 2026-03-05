@@ -23,7 +23,8 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      vsix_name: ${{ steps.meta.outputs.vsix_name }}
+      base_vsix_name: ${{ steps.meta.outputs.base_vsix_name }}
+      kiro_vsix_name: ${{ steps.meta.outputs.kiro_vsix_name }}
 
     steps:
       - name: Checkout
@@ -49,17 +50,43 @@ jobs:
         shell: bash
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          VSIX_NAME="copilot-specs-${VERSION}.vsix"
-          echo "vsix_name=$VSIX_NAME" >> "$GITHUB_OUTPUT"
+          BASE_VSIX_NAME="copilot-specs-${VERSION}.vsix"
+          KIRO_VSIX_NAME="kiro-for-copilot-${VERSION}.vsix"
+          echo "base_vsix_name=$BASE_VSIX_NAME" >> "$GITHUB_OUTPUT"
+          echo "kiro_vsix_name=$KIRO_VSIX_NAME" >> "$GITHUB_OUTPUT"
 
-      - name: Build VSIX
-        run: npx @vscode/vsce package --out "${{ steps.meta.outputs.vsix_name }}"
+      - name: Build Copilot Specs VSIX
+        run: npx @vscode/vsce package --out "${{ steps.meta.outputs.base_vsix_name }}"
 
-      - name: Upload VSIX artifact
+      - name: Build Kiro for Copilot VSIX
+        shell: bash
+        run: |
+          cp package.json package.json.bak
+          trap 'mv package.json.bak package.json' EXIT
+
+          node <<'NODE'
+          const fs = require("node:fs");
+          const packageJson = JSON.parse(fs.readFileSync("package.json", "utf8"));
+
+          packageJson.name = "kiro-for-copilot";
+          packageJson.displayName = "Kiro for Copilot";
+
+          fs.writeFileSync("package.json", `${JSON.stringify(packageJson, null, 2)}\n`);
+          NODE
+
+          npx @vscode/vsce package --out "${{ steps.meta.outputs.kiro_vsix_name }}"
+
+      - name: Upload Copilot Specs VSIX artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.meta.outputs.vsix_name }}
-          path: ${{ steps.meta.outputs.vsix_name }}
+          name: ${{ steps.meta.outputs.base_vsix_name }}
+          path: ${{ steps.meta.outputs.base_vsix_name }}
+
+      - name: Upload Kiro for Copilot VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.kiro_vsix_name }}
+          path: ${{ steps.meta.outputs.kiro_vsix_name }}
 
   publish:
     name: Publish Extension
@@ -82,10 +109,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download VSIX artifact
+      - name: Download Copilot Specs VSIX artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.package.outputs.vsix_name }}
+          name: ${{ needs.package.outputs.base_vsix_name }}
+
+      - name: Download Kiro for Copilot VSIX artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.package.outputs.kiro_vsix_name }}
 
       - name: Resolve publish target
         id: target
@@ -97,13 +129,21 @@ jobs:
             echo "publish_target=${{ inputs.publish_target }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish to VS Marketplace
+      - name: Publish Copilot Specs to VS Marketplace
         if: (steps.target.outputs.publish_target == 'marketplace' || steps.target.outputs.publish_target == 'both') && env.VSCE_PAT != ''
-        run: npx @vscode/vsce publish --packagePath "${{ needs.package.outputs.vsix_name }}" -p "$VSCE_PAT"
+        run: npx @vscode/vsce publish --packagePath "${{ needs.package.outputs.base_vsix_name }}" -p "$VSCE_PAT"
 
-      - name: Publish to Open VSX
+      - name: Publish Copilot Specs to Open VSX
         if: (steps.target.outputs.publish_target == 'open-vsx' || steps.target.outputs.publish_target == 'both') && env.OPEN_VSX_TOKEN != ''
-        run: npx --yes ovsx publish "${{ needs.package.outputs.vsix_name }}" -p "$OPEN_VSX_TOKEN"
+        run: npx --yes ovsx publish "${{ needs.package.outputs.base_vsix_name }}" -p "$OPEN_VSX_TOKEN"
+
+      - name: Publish Kiro for Copilot to VS Marketplace
+        if: (steps.target.outputs.publish_target == 'marketplace' || steps.target.outputs.publish_target == 'both') && env.VSCE_PAT != ''
+        run: npx @vscode/vsce publish --packagePath "${{ needs.package.outputs.kiro_vsix_name }}" -p "$VSCE_PAT"
+
+      - name: Publish Kiro for Copilot to Open VSX
+        if: (steps.target.outputs.publish_target == 'open-vsx' || steps.target.outputs.publish_target == 'both') && env.OPEN_VSX_TOKEN != ''
+        run: npx --yes ovsx publish "${{ needs.package.outputs.kiro_vsix_name }}" -p "$OPEN_VSX_TOKEN"
 
       - name: Summary
         shell: bash
@@ -111,10 +151,13 @@ jobs:
           {
             echo "## Release summary"
             echo ""
-            echo "- VSIX: \`${{ needs.package.outputs.vsix_name }}\`"
+            echo "- Copilot Specs VSIX: \`${{ needs.package.outputs.base_vsix_name }}\`"
+            echo "- Kiro for Copilot VSIX: \`${{ needs.package.outputs.kiro_vsix_name }}\`"
             echo "- Target: \`${{ steps.target.outputs.publish_target }}\`"
-            echo "- VS Marketplace token configured: \`${{ env.VSCE_PAT != '' }}\`"
-            echo "- Open VSX token configured: \`${{ env.OPEN_VSX_TOKEN != '' }}\`"
+            echo "- Copilot Specs VS Marketplace token configured: \`${{ env.VSCE_PAT != '' }}\`"
+            echo "- Copilot Specs Open VSX token configured: \`${{ env.OPEN_VSX_TOKEN != '' }}\`"
+            echo "- Kiro for Copilot uses the same Marketplace token: \`${{ env.VSCE_PAT != '' }}\`"
+            echo "- Kiro for Copilot uses the same Open VSX token: \`${{ env.OPEN_VSX_TOKEN != '' }}\`"
             echo ""
-            echo "If publish was skipped, add the matching token(s): \`VSCE_PAT\` for Marketplace and \`OPEN_VSX_TOKEN\` for Open VSX."
+            echo "If publish was skipped, add matching token(s): \`VSCE_PAT\` for Marketplace and \`OPEN_VSX_TOKEN\` for Open VSX."
           } >> "$GITHUB_STEP_SUMMARY"
