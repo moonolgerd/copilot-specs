@@ -6,7 +6,14 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 
 ## [Unreleased]
 
-## [0.1.10] - 2026-03-04
+## [0.1.11] - 2026-03-05
+
+### Fixed
+
+- **Start Task progress spinner** — clicking Start Task now shows a notification progress indicator while building the task prompt, instead of silently blocking.
+- **Agent sessions route to Tasks tab** — removed the `workbench.action.chat.newLocalChat` pre-call from Start Task and Verify All Tasks; sessions now correctly appear in Copilot's Tasks panel instead of the Chats panel.
+
+## [0.1.10]- 2026-03-04
 
 ### Changed
 

@@ -723,22 +723,20 @@ export function activate(context: vscode.ExtensionContext): void {
         // agent can read files, make edits, and run tests with full tool
         // access — instead of routing through the @spec chat participant
         // which only has a blind LLM call.
-        const prompt = await buildStartTaskPrompt(specName, id);
-
-        // Start each task in its own local chat session so it appears as a
-        // distinct item in Copilot's agent tasks/session list.
-        try {
-          await vscode.commands.executeCommand(
-            "workbench.action.chat.newLocalChat",
-          );
-        } catch {
-          // Fallback to opening chat directly when this command is unavailable.
-        }
-
-        await vscode.commands.executeCommand("workbench.action.chat.open", {
-          query: prompt,
-          mode: "agent",
-        });
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: `Preparing task ${id}…`,
+            cancellable: false,
+          },
+          async () => {
+            const prompt = await buildStartTaskPrompt(specName!, id!);
+            await vscode.commands.executeCommand("workbench.action.chat.open", {
+              query: prompt,
+              mode: "agent",
+            });
+          },
+        );
       },
     ],
 
@@ -789,22 +787,20 @@ export function activate(context: vscode.ExtensionContext): void {
           name = pick.label;
         }
 
-        const prompt = await buildRunAllTasksVerificationPrompt(name);
-
-        // Start verification in its own local chat session so it appears as a
-        // distinct item in Copilot's agent tasks/session list.
-        try {
-          await vscode.commands.executeCommand(
-            "workbench.action.chat.newLocalChat",
-          );
-        } catch {
-          // Fallback to opening chat directly when this command is unavailable.
-        }
-
-        await vscode.commands.executeCommand("workbench.action.chat.open", {
-          query: prompt,
-          mode: "agent",
-        });
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: `Preparing verification for "${name}"…`,
+            cancellable: false,
+          },
+          async () => {
+            const prompt = await buildRunAllTasksVerificationPrompt(name!);
+            await vscode.commands.executeCommand(
+              "workbench.action.chat.open",
+              { query: prompt, mode: "agent" },
+            );
+          },
+        );
       },
     ],
 

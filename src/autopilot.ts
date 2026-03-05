@@ -240,30 +240,16 @@ export async function applyResponseAsEdit(
     return;
   }
 
-  const wsEdit = new vscode.WorkspaceEdit();
   for (const { filePath, content } of edits) {
     const absPath = path.isAbsolute(filePath)
       ? filePath
       : path.join(workspaceRoot, filePath);
     const uri = vscode.Uri.file(absPath);
 
-    // Check if file exists
-    let fileExists = false;
-    try {
-      await vscode.workspace.fs.stat(uri);
-      fileExists = true;
-    } catch {
-      // File doesn't exist — create it
-    }
+    // Ensure parent directories exist
+    const parentUri = vscode.Uri.file(path.dirname(absPath));
+    await vscode.workspace.fs.createDirectory(parentUri);
 
-    if (!fileExists) {
-      wsEdit.createFile(uri, { overwrite: false, ignoreIfExists: true });
-    }
-
-    wsEdit.set(uri, [
-      new vscode.TextEdit(new vscode.Range(0, 0, 99999, 0), content),
-    ]);
+    await vscode.workspace.fs.writeFile(uri, Buffer.from(content, "utf8"));
   }
-
-  await vscode.workspace.applyEdit(wsEdit);
 }
