@@ -6,11 +6,13 @@ on:
       publish_target:
         description: "Where to publish"
         required: true
-        default: marketplace
+        default: both
         type: choice
         options:
           - dry-run
           - marketplace
+          - open-vsx
+          - both
   push:
     tags:
       - "v*"
@@ -65,6 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OPEN_VSX_TOKEN: ${{ secrets.OPEN_VSX_TOKEN }}
 
     steps:
       - name: Checkout
@@ -89,14 +92,18 @@ jobs:
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
-            echo "publish_target=marketplace" >> "$GITHUB_OUTPUT"
+            echo "publish_target=both" >> "$GITHUB_OUTPUT"
           else
             echo "publish_target=${{ inputs.publish_target }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Publish to VS Marketplace
-        if: steps.target.outputs.publish_target == 'marketplace' && env.VSCE_PAT != ''
+        if: (steps.target.outputs.publish_target == 'marketplace' || steps.target.outputs.publish_target == 'both') && env.VSCE_PAT != ''
         run: npx @vscode/vsce publish --packagePath "${{ needs.package.outputs.vsix_name }}" -p "$VSCE_PAT"
+
+      - name: Publish to Open VSX
+        if: (steps.target.outputs.publish_target == 'open-vsx' || steps.target.outputs.publish_target == 'both') && env.OPEN_VSX_TOKEN != ''
+        run: npx --yes ovsx publish "${{ needs.package.outputs.vsix_name }}" -p "$OPEN_VSX_TOKEN"
 
       - name: Summary
         shell: bash
@@ -107,6 +114,7 @@ jobs:
             echo "- VSIX: \`${{ needs.package.outputs.vsix_name }}\`"
             echo "- Target: \`${{ steps.target.outputs.publish_target }}\`"
             echo "- VS Marketplace token configured: \`${{ env.VSCE_PAT != '' }}\`"
+            echo "- Open VSX token configured: \`${{ env.OPEN_VSX_TOKEN != '' }}\`"
             echo ""
-            echo "If publish was skipped, add \`VSCE_PAT\` and rerun the workflow."
+            echo "If publish was skipped, add the matching token(s): \`VSCE_PAT\` for Marketplace and \`OPEN_VSX_TOKEN\` for Open VSX."
           } >> "$GITHUB_STEP_SUMMARY"

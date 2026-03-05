@@ -6,6 +6,14 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-03-04
+
+### Changed
+
+- Bumped extension version to `0.1.10`.
+- Release workflow now supports publishing the packaged VSIX to Open VSX in addition to VS Marketplace.
+- `release.yml` now reads `OPEN_VSX_TOKEN` for Open VSX publishing and uses `publish_target=both` on tag-triggered releases.
+
 ## [0.1.9] - 2026-03-02
 
 ### Changed
@@ -145,7 +153,9 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 - Release workflow for VSIX packaging and VS Marketplace publishing.
 - Repository documentation (`README.md`) and MIT license (`LICENSE`).
 
-[Unreleased]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.8...HEAD
+[Unreleased]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.10...HEAD
+[0.1.10]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.9...v0.1.10
+[0.1.9]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/moonolgerd/copilot-specs/compare/v0.1.5...v0.1.6

@@ -83,3 +83,8 @@ applyTo: "src/**"
 - [x] **T13**: Documentation and template consistency
   - [x] Fix malformed `name` placeholders in spec templates
   - [x] Update README and changelog for new workflows and config behavior
+
+- [x] **T14**: Publish VSIX to Open VSX
+  - [x] Add release workflow step to publish packaged VSIX to Open VSX
+  - [x] Configure Open VSX token usage via GitHub secret (e.g., `OPEN_VSX_TOKEN`)
+  - [x] Document Open VSX publishing setup and release behavior

@@ -3,6 +3,7 @@
 [![CI](https://github.com/moonolgerd/copilot-specs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/moonolgerd/copilot-specs/actions/workflows/ci.yml)
 [![Release](https://github.com/moonolgerd/copilot-specs/actions/workflows/release.yml/badge.svg)](https://github.com/moonolgerd/copilot-specs/actions/workflows/release.yml)
 [![VS Marketplace](https://img.shields.io/visual-studio-marketplace/v/moonolgerd.copilot-specs?label=VS%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=moonolgerd.copilot-specs)
+[![Open VSX](https://img.shields.io/open-vsx/v/moonolgerd/copilot-specs?label=Open%20VSX)](https://open-vsx.org/extension/moonolgerd/copilot-specs)
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/moonolgerd.copilot-specs?label=Installs)](https://marketplace.visualstudio.com/items?itemName=moonolgerd.copilot-specs)
 [![Rating](https://img.shields.io/visual-studio-marketplace/r/moonolgerd.copilot-specs?label=Rating)](https://marketplace.visualstudio.com/items?itemName=moonolgerd.copilot-specs)
 
@@ -127,11 +128,12 @@ Workflows are in `.github/workflows/`:
 - `release.yml`
   - Runs on tag push `v*` or manual dispatch
   - Packages a `.vsix` artifact
-  - Publishes to VS Marketplace when `VSCE_PAT` is configured
+  - Publishes to VS Marketplace and/or Open VSX based on selected target and configured tokens
 
-Required secret for publishing:
+Publishing secrets:
 
 - `VSCE_PAT`
+- `OPEN_VSX_TOKEN`
 
 For workflow details, see `.github/workflows/README.md`.
 
@@ -145,6 +147,15 @@ git push origin v0.1.1
 ```
 
 Manual release is also available through the GitHub Actions UI.
+
+Manual `publish_target` options:
+
+- `dry-run`
+- `marketplace`
+- `open-vsx`
+- `both`
+
+On tag pushes (`v*`), the release workflow uses `both` and publishes each target when its matching token is configured.
 
 ## Repository layout
 
