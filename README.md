@@ -9,7 +9,7 @@
 
 Spec-driven development for VS Code + GitHub Copilot.
 
-`copilot-specs` bridges the gap between planning and implementation — write structured **requirements**, **design**, and **task** documents, then have GitHub Copilot generate and execute them against your codebase. Every task links back to real source files via CodeLens so nothing gets lost.
+`copilot-specs` bridges the gap between planning and implementation — write structured **requirements**, **design**, and **task** documents, then have GitHub Copilot or another VS Code chat model generate and execute them against your codebase. Every task links back to real source files via CodeLens so nothing gets lost.
 
 ## Install
 
@@ -46,6 +46,7 @@ Or search for `copilot-specs` in the VS Code Extensions panel (`Ctrl+Shift+X`).
   - Generate requirements, design, and tasks with chat participant commands
   - Start Task opens a rich context prompt in **agent mode** — the agent can read files, make edits, and run tests
   - Verify All Tasks opens a spec-wide **agent-mode verification prompt** to validate completion against the codebase
+  - Optional `copilot-specs.languageModelSelector` setting to target custom VS Code chat models/providers for generation and autopilot
 
 - **Project guidance + tooling**
   - Instructions, rules, skills, and prompts explorer
@@ -55,7 +56,7 @@ Or search for `copilot-specs` in the VS Code Extensions panel (`Ctrl+Shift+X`).
 ## Requirements
 
 - VS Code **1.93+**
-- GitHub Copilot Chat (for AI generation and autopilot features)
+- GitHub Copilot Chat or another VS Code chat model provider (for AI generation and autopilot features)
 
 ## Quick Start
 
@@ -71,6 +72,22 @@ Or search for `copilot-specs` in the VS Code Extensions panel (`Ctrl+Shift+X`).
    ```
 5. Click **Start Task** on any task — a rich context prompt opens in agent mode where Copilot can read your code, make edits, and verify the result.
 6. Click **Verify All Tasks with Copilot** on a spec row to run a full completion verification workflow in agent mode.
+
+## Model Selection
+
+Spec generation and autopilot use VS Code's language model API. By default, the extension prefers Copilot's `gpt-4o` model when available and otherwise falls back to the first available VS Code chat model.
+
+To target a specific custom provider/model, set `copilot-specs.languageModelSelector` in your settings:
+
+```json
+"copilot-specs.languageModelSelector": {
+  "vendor": "my-provider",
+  "family": "llama",
+  "version": "1.0"
+}
+```
+
+You can also select a model by exact `id`.
 
 ## Development
 

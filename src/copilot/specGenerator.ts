@@ -2,6 +2,10 @@ import * as vscode from "vscode";
 import { createSpec } from "../specManager.js";
 import { readSteeringForContext } from "../steeringManager.js";
 import { loadTasks, applyCompletedIds } from "../taskManager.js";
+import {
+  describeLanguageModelSelection,
+  selectLanguageModel,
+} from "../languageModel.js";
 
 export async function generateSpecContent(
   specName: string,
@@ -10,11 +14,10 @@ export async function generateSpecContent(
   section: "requirements" | "design" | "tasks",
   stream: vscode.ChatResponseStream,
 ): Promise<string> {
-  const models = await vscode.lm.selectChatModels({ family: "gpt-4o" });
-  const model = models[0];
+  const model = await selectLanguageModel();
   if (!model) {
     stream.markdown(
-      "\n> **Error:** No Copilot model available. Make sure GitHub Copilot Chat is installed.\n",
+      `\n> **Error:** No compatible chat model available. Configure \`copilot-specs.languageModelSelector\` or install a VS Code chat model provider. Currently looking for ${describeLanguageModelSelection()}.\n`,
     );
     return "";
   }

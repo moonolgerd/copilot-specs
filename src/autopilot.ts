@@ -12,6 +12,10 @@ import {
 } from "./utils/fileSystem.js";
 import { stripFrontmatter } from "./utils/frontmatter.js";
 import { readSteeringForContext } from "./steeringManager.js";
+import {
+  describeLanguageModelSelection,
+  selectLanguageModel,
+} from "./languageModel.js";
 
 export async function runAutopilot(): Promise<void> {
   const specs = await listSpecs();
@@ -41,7 +45,7 @@ export async function runAutopilot(): Promise<void> {
   }
 
   const confirmed = await vscode.window.showWarningMessage(
-    `Autopilot will attempt to implement ${pending.length} task(s) in spec "${specPick.label}" using Copilot. Continue?`,
+    `Autopilot will attempt to implement ${pending.length} task(s) in spec "${specPick.label}" using ${describeLanguageModelSelection()}. Continue?`,
     { modal: true },
     "Run Autopilot",
   );
@@ -93,11 +97,10 @@ async function executeTask(
   const context = await buildTaskContext(specName, task);
 
   // Select model
-  const models = await vscode.lm.selectChatModels({ family: "gpt-4o" });
-  const model = models[0];
+  const model = await selectLanguageModel();
   if (!model) {
     vscode.window.showWarningMessage(
-      "No Copilot model available. Skipping autopilot.",
+      "No compatible chat model available. Configure copilot-specs.languageModelSelector or install a VS Code chat model provider.",
     );
     return;
   }

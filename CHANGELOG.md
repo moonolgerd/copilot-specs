@@ -6,6 +6,14 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 
 ## [Unreleased]
 
+### Added
+
+- Added `copilot-specs.languageModelSelector` so spec generation and autopilot can target custom VS Code chat models by `id`, `vendor`, `family`, or `version`.
+
+### Changed
+
+- Spec generation and autopilot no longer require Copilot's `gpt-4o` family. They now prefer that model when available but can fall back to other installed VS Code chat model providers.
+
 ## [0.1.12] - 2026-03-05
 
 ### Changed
