@@ -1,6 +1,7 @@
 import * as assert from "node:assert/strict";
 import {
   describeLanguageModelSelection,
+  matchesLanguageModelSelector,
   normalizeLanguageModelSelector,
   pickLanguageModel,
 } from "../../languageModelSelector.js";
@@ -9,6 +10,7 @@ type ModelStub = {
   id: string;
   vendor: string;
   family: string;
+  version?: string;
 };
 
 suite("languageModel", () => {
@@ -49,9 +51,24 @@ suite("languageModel", () => {
 
   suite("pickLanguageModel", () => {
     const models: ModelStub[] = [
-      { id: "custom.fast", vendor: "custom", family: "llama" },
-      { id: "copilot.gpt-4o", vendor: "copilot", family: "gpt-4o" },
-      { id: "custom.smart", vendor: "custom", family: "mixtral" },
+      {
+        id: "custom.fast",
+        vendor: "custom",
+        family: "llama",
+        version: "1.0",
+      },
+      {
+        id: "copilot.gpt-4o",
+        vendor: "copilot",
+        family: "gpt-4o",
+        version: "1.0",
+      },
+      {
+        id: "custom.smart",
+        vendor: "custom",
+        family: "mixtral",
+        version: "2.0",
+      },
     ];
 
     test("prefers configured model id when provided", () => {
@@ -59,9 +76,13 @@ suite("languageModel", () => {
       assert.equal(selected?.id, "custom.smart");
     });
 
-    test("uses first configured match set when selector has no id", () => {
-      const selected = pickLanguageModel(models, { vendor: "custom" });
-      assert.equal(selected?.id, "custom.fast");
+    test("matches configured selector fields when id is not provided", () => {
+      const selected = pickLanguageModel(models, {
+        vendor: "custom",
+        family: "mixtral",
+        version: "2.0",
+      });
+      assert.equal(selected?.id, "custom.smart");
     });
 
     test("prefers Copilot gpt-4o by default when available", () => {
@@ -80,6 +101,52 @@ suite("languageModel", () => {
 
     test("returns undefined when no models are available", () => {
       assert.equal(pickLanguageModel([]), undefined);
+    });
+
+    test("returns undefined when the configured selector does not match", () => {
+      assert.equal(
+        pickLanguageModel(models, { id: "missing", family: "gpt-4o" }),
+        undefined,
+      );
+    });
+  });
+
+  suite("matchesLanguageModelSelector", () => {
+    test("requires every provided selector field to match", () => {
+      assert.equal(
+        matchesLanguageModelSelector(
+          {
+            id: "custom.fast",
+            vendor: "custom",
+            family: "llama",
+            version: "1.0",
+          },
+          {
+            vendor: "custom",
+            family: "llama",
+            version: "1.0",
+          },
+        ),
+        true,
+      );
+    });
+
+    test("returns false when any selector field differs", () => {
+      assert.equal(
+        matchesLanguageModelSelector(
+          {
+            id: "custom.fast",
+            vendor: "custom",
+            family: "llama",
+            version: "1.0",
+          },
+          {
+            vendor: "custom",
+            family: "mixtral",
+          },
+        ),
+        false,
+      );
     });
   });
 

@@ -8,7 +8,28 @@ export type LanguageModelIdentity = {
   id: string;
   vendor: string;
   family: string;
+  version?: string;
 };
+
+export function matchesLanguageModelSelector(
+  model: LanguageModelIdentity,
+  selector: ConfiguredLanguageModelSelector,
+): boolean {
+  if (selector.id && model.id !== selector.id) {
+    return false;
+  }
+  if (selector.vendor && model.vendor !== selector.vendor) {
+    return false;
+  }
+  if (selector.family && model.family !== selector.family) {
+    return false;
+  }
+  if (selector.version && model.version !== selector.version) {
+    return false;
+  }
+
+  return true;
+}
 
 export function normalizeLanguageModelSelector(
   value: unknown,
@@ -44,11 +65,7 @@ export function pickLanguageModel<T extends LanguageModelIdentity>(
   }
 
   if (selector) {
-    if (selector.id) {
-      return models.find((model) => model.id === selector.id) ?? models[0];
-    }
-
-    return models[0];
+    return models.find((model) => matchesLanguageModelSelector(model, selector));
   }
 
   return (

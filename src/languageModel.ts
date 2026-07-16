@@ -19,16 +19,12 @@ export function getConfiguredLanguageModelSelector():
 
 export async function selectLanguageModel():
   Promise<vscode.LanguageModelChat | undefined> {
+  const models = await vscode.lm.selectChatModels();
   const selector = getConfiguredLanguageModelSelector();
   if (selector) {
-    const configuredModels = await vscode.lm.selectChatModels(selector);
-    const configuredModel = pickLanguageModel(configuredModels, selector);
-    if (configuredModel) {
-      return configuredModel;
-    }
+    return pickLanguageModel(models, selector);
   }
 
-  const models = await vscode.lm.selectChatModels();
   return pickLanguageModel(models);
 }
 
