@@ -444,6 +444,30 @@
           ],
           "default": "feature",
           "description": "Default spec template to use when creating a new spec."
+        },
+        "copilot-specs.languageModelSelector": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": false,
+          "description": "Optional VS Code chat model selector for spec generation and autopilot. Set id, vendor, family, or version to target a specific custom model/provider. Leave empty to auto-select the best available model.",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Exact VS Code chat model id to use."
+            },
+            "vendor": {
+              "type": "string",
+              "description": "VS Code chat model vendor to match."
+            },
+            "family": {
+              "type": "string",
+              "description": "VS Code chat model family to match."
+            },
+            "version": {
+              "type": "string",
+              "description": "VS Code chat model version to match."
+            }
+          }
         }
       }
     }
