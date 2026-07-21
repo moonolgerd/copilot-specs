@@ -6,6 +6,15 @@ The format is based on Keep a Changelog, and this project follows Semantic Versi
 
 ## [Unreleased]
 
+### Added
+
+- `copilot-specs.cacheGitignoreBehavior` setting for controlling `.copilot-specs-cache/` `.gitignore` updates: automatic, prompt first, or disabled.
+
+### Changed
+
+- Cache `.gitignore` setup now checks Git before editing `.gitignore`, so paths already ignored through repository, global, or other Git ignore configuration are left alone.
+- Prompted cache `.gitignore` choices are remembered per workspace folder.
+
 ## [0.1.12] - 2026-03-05
 
 ### Changed
