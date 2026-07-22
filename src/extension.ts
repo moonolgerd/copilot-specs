@@ -71,8 +71,8 @@ import {
   listSkillFiles,
   listInstructionRulesFiles,
   listPromptFiles,
-  ensureGitignoreEntry,
 } from "./utils/fileSystem.js";
+import { ensureCacheGitignoreEntries } from "./utils/cacheGitignore.js";
 import { Task } from "./models/index.js";
 import { HookEventName } from "./models/index.js";
 
@@ -83,8 +83,8 @@ export function activate(context: vscode.ExtensionContext): void {
   initTemplates(extensionPath);
   initHooks(extensionPath);
 
-  // Ensure cache directory is gitignored
-  void ensureGitignoreEntry(".copilot-specs-cache/");
+  // Ensure cache directory is gitignored when configured and not already ignored by Git
+  void ensureCacheGitignoreEntries(context);
   // ── Providers ───────────────────────────────────────────────────────────────
 
   const specProvider = new SpecProvider();

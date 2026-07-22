@@ -444,6 +444,21 @@
           ],
           "default": "feature",
           "description": "Default spec template to use when creating a new spec."
+        },
+        "copilot-specs.cacheGitignoreBehavior": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "prompt",
+            "disabled"
+          ],
+          "enumDescriptions": [
+            "Add .copilot-specs-cache/ to workspace .gitignore files automatically when Git does not already ignore it.",
+            "Ask before adding .copilot-specs-cache/ to each workspace folder's .gitignore, and remember the answer for that folder.",
+            "Never add .copilot-specs-cache/ to .gitignore files."
+          ],
+          "default": "auto",
+          "description": "Controls whether Copilot Specs adds .copilot-specs-cache/ to workspace .gitignore files."
         }
       }
     }

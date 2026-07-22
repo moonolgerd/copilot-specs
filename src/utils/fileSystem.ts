@@ -50,8 +50,13 @@ export async function ensureDir(uri: vscode.Uri): Promise<void> {
 /**
  * Adds `entry` to the workspace .gitignore if not already present.
  */
-export async function ensureGitignoreEntry(entry: string): Promise<void> {
-  const uri = resolveWorkspacePath(".gitignore");
+export async function ensureGitignoreEntry(
+  entry: string,
+  workspaceUri?: vscode.Uri,
+): Promise<void> {
+  const uri = workspaceUri
+    ? vscode.Uri.joinPath(workspaceUri, ".gitignore")
+    : resolveWorkspacePath(".gitignore");
   if (!uri) {
     return;
   }
